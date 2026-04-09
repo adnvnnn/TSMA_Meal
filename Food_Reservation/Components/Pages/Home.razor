@@ -4,10 +4,12 @@
 @page "/"
 
 @using Food_Reservation.Features.Restaurants
+@using Food_Reservation.Shared
 @using Food_Reservation.Tools
 @using MediatR
 @* @attribute [Authorize]
  *@
+
 <div class="container">
     <div class="header-box text-center">
         <h2 class="fw-bold text-dark mb-3">
@@ -130,6 +132,13 @@
 
         }
         catch (PersonnelFiredException e)
+        {
+            //TODO:Log Out
+
+            Navigation.NavigateTo("/login", forceLoad: true);
+
+        }
+        catch (NotPermittedException e)
         {
             //TODO:Log Out
 

@@ -1,28 +1,115 @@
 ﻿using Food_Reservation.Database;
+using Food_Reservation.Entities;
+using Food_Reservation.Shared;
+using Food_Reservation.Tools;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 namespace Food_Reservation.Features.Restaurants;
 
-public record CancelReserveRequest(int FoodId,int PersonnelCode) : IRequest;
+public record CancelReserveRequest(int ReserveId,int PersonnelCode) : IRequest;
 
-public class CancelReserveHandler(AppDbContext context) : IRequestHandler<CancelReserveRequest>
+public class CancelReserveHandler(ICancelReserveAccess cancelReserveAccess,ICancelReserveRepository repository,IPersonnelRepository personnelRepository) : IRequestHandler<CancelReserveRequest>
 {
     public async Task Handle(CancelReserveRequest request, CancellationToken cancellationToken)
     {
+        //IS PERSONNEL ACTIVE
 
-        wrng query
-        var reserve = await context.Reserve
-            .FirstOrDefaultAsync(r => r.FoodId == request.FoodId && r.PersonnelCode == request.PersonnelCode,
-                cancellationToken);
+        var personnel = await personnelRepository.GetPersonnelAsync(request.PersonnelCode, cancellationToken);
+
+        if (personnel == null) return /*TODO:Log FATAL*/;
+
+        if (!personnel.Active) throw new PersonnelFiredException();
 
 
-        if (reserve == null) return;
+
+        //CHECK PERSONNEL ACCESS    
+
+        if (!await personnelRepository.PersonnelHasAccess(request.PersonnelCode)) throw new NotPermittedException();
+
+
+
+        //GET RESERVATION
+
+        var reserve = await repository.GetReserveAsync(request.ReserveId,cancellationToken);
+
+        if (reserve == null) return /*TODO:Log FATAL*/;
+
+        if (reserve.PersonnelCode != request.PersonnelCode) return /*TODO:Log FATAL*/;
+
+
+
+        //CAN RESERVE
+
+        if (cancelReserveAccess.CanCancel(reserve.ReserveDate)) return /*TODO:Log FATAL*/;
+
+
+        //IF CANCELED BEFORE 
+
+        if (reserve.CanceledReserve) return;
+
+
+
+        //CANCEL RESERVE 
 
         reserve.CanceledReserve = true;
 
+        await repository.UpdateReserveAsync(reserve,cancellationToken);
+    }
+}
+
+public interface ICancelReserveAccess
+{
+    bool CanCancel(string foodDate);
+}
+internal class CancelReserveAccess : ICancelReserveAccess
+{
+    public bool CanCancel(string foodDate)
+    {
+        var today = PersianDateTime.GetTodayPersianDate();
+
+        //IF IS EXPIRED
+        //EX: foodDate = "1403/01/10"، today = "1403/01/11" => ANSWER: TRUE => return FALSE
+        if (string.CompareOrdinal(foodDate, today) <= 0) return false; /*TODO:Log FATAL*/;
+
+        return true;
+    }
+}
+
+
+public interface ICancelReserveRepository
+{
+    Task<Reserve?> GetReserveAsync(int id,CancellationToken cancellationToken);
+
+    Task UpdateReserveAsync(Reserve reserve, CancellationToken cancellationToken);
+
+}
+
+internal class CancelReserveRepository(AppDbContext context) : ICancelReserveRepository
+{
+    public async Task<Reserve?> GetReserveAsync(int id, CancellationToken cancellationToken)
+    {
+        return await context.Reserve
+            .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
+    }
+
+    public async Task UpdateReserveAsync(Reserve reserve, CancellationToken cancellationToken)
+    {
         context.Reserve.Update(reserve);
 
         await context.SaveChangesAsync(cancellationToken);
+    }
+}
+
+
+
+
+public static class CancelReserveRegister
+{
+    public static void RegisterCancelReserve(this IServiceCollection services)
+    {
+        services.AddScoped<ICancelReserveAccess, CancelReserveAccess>();
+
+        services.AddScoped<ICancelReserveRepository, CancelReserveRepository>();
     }
 }

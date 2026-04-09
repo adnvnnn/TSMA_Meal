@@ -1,88 +1,70 @@
-﻿using Azure.Core;
-using Food_Reservation.Database;
+﻿using Food_Reservation.Database;
+using Food_Reservation.Entities;
+using Food_Reservation.Shared;
 using Food_Reservation.Tools;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using System.Threading;
 
 namespace Food_Reservation.Features.Restaurants;
 
-public record FoodListRequest(int PersonnelCode) : IRequest<List<FoodListViewModel>>;
+public record FoodListRequest(int PersonnelCode,int PageId = 0) : IRequest<List<FoodListViewModel>>;
 
-internal class FoodListHandler(AppDbContext context,IFoodListRepository repository) : IRequestHandler<FoodListRequest,List<FoodListViewModel>>
+internal class FoodListHandler(IFoodListRepository repository, IOffDaysRepository offDaysRepository,IPersonnelRepository personnelRepository) : IRequestHandler<FoodListRequest,List<FoodListViewModel>>
 {
     public async Task<List<FoodListViewModel>> Handle(FoodListRequest request, CancellationToken cancellationToken)
     {
+        //IS ACTIVE  
 
-        var personnel = ;
+        var isActive = await personnelRepository.IsActive(request.PersonnelCode,cancellationToken);
 
-        if (personnel == null) throw new Exception();
-
-        if (!personnel.Active) throw new PersonnelFiredException();
-
-        var isActive = await repository.IsPersonnelActive(request.PersonnelCode,cancellationToken);
-
-        if (!isActive) throw new PersonnelNotAccessFoodListException();
+        if (!isActive) throw new PersonnelFiredException();
 
 
-        var today = DateTime.Now/*.AddDays(1)*/.DayOfWeek + 2;
-        var daysToSaturday = today == DayOfWeek.Sunday ? 6 : (int)today;
-        var startOfWeekDate = DateTime.Now.AddDays(-daysToSaturday).Date;
-        var endOfWeekDate = startOfWeekDate.AddDays(6);
 
-        var startOfWeek = startOfWeekDate.ToString("yyyy/MM/dd");
-        var endOfWeek = endOfWeekDate.ToString("yyyy/MM/dd");
+        //CHECK PERSONNEL ACCESS    
 
-        try
+        if (!await personnelRepository.PersonnelHasAccess(request.PersonnelCode)) throw new NotPermittedException();
+
+
+
+
+        //GET PERSONNEL FOODS
+
+        var discount = await repository.GetPersonnelDiscountAsync(request.PersonnelCode,cancellationToken);
+
+        var startOfWeek = PersianDateTime.GetPersianDateByWeekDay(0);
+
+        var endOfWeek = PersianDateTime.GetPersianDateByWeekDay(6);
+
+
+        var personnelFoodsId = await repository
+            .GetPersonnelReservesIdAsync(request.PersonnelCode,startOfWeek,endOfWeek, cancellationToken);
+
+        var weekFoods = await repository.GetFoodsAsync(cancellationToken);
+
+        var invalidDays = await offDaysRepository.GetOffDaysAsync(cancellationToken);
+
+
+        return weekFoods.Select(f => new FoodListViewModel
         {
-            var userReserved = await context.Reserve
-                .Where(r => r.PersonnelCode == request.PersonnelCode)
-                .Where(r => string.Compare(r.ReserveDate, startOfWeek) >= 0
-                            && string.Compare(r.ReserveDate, endOfWeek) <= 0)
-                .AsNoTracking()
-                .ToListAsync(cancellationToken);
+            Id = f.Id,
+            OrderDay = f.OrderDay,
+            Name = f.Name,
+            Day = f.Day,
+            Restaurant = f.Restaurant,
+            ImageUrl = f.ImageUrl,
+            Price = f.Price,
 
-            var reservedFoodIds = userReserved.Select(r => r.FoodId).ToHashSet();
+            DiscountedPrice = Convert.ToInt32(f.Price) * (100 - discount) / 100,
 
-            var allFoods = await context.Foods
-                .OrderBy(f => f.OrderDay)
-                .AsNoTracking()
-                .ToListAsync(cancellationToken);
+            Date = PersianDateTime.GetPersianDateByWeekDay(f.OrderDay),
 
-            var weekDays = new List<DateTime>
-            {
-                startOfWeekDate.AddDays(0),
-                startOfWeekDate.AddDays(1),
-                startOfWeekDate.AddDays(2), 
-                startOfWeekDate.AddDays(3), 
-                startOfWeekDate.AddDays(4), 
-                startOfWeekDate.AddDays(5), 
-                startOfWeekDate.AddDays(6) 
-            };
+            IsExpired = f.OrderDay < (int)PersianDateTime.GetTodayWeekDay() + 1,
 
+            IsAvailable = !invalidDays.Contains(PersianDateTime.GetPersianDateByWeekDay(f.OrderDay)),
 
-            var invalidDays = await context.MealOffDay.AsNoTracking().ToArrayAsync(cancellationToken);
-            return allFoods.Select(f => new FoodListViewModel
-            {
-                Id = f.Id,
-                OrderDay = f.OrderDay,
-                Name = f.Name,
-                Day = f.Day,
-                Restaurant = f.Restaurant,
-                ImageUrl = f.ImageUrl,
-                Price = f.Price,
-                DiscountedPrice = Convert.ToInt32(f.Price) * (100 - personnel.Discount) / 100,
-                Date = weekDays[f.OrderDay].ToPersianDate(),
-                IsExpired = f.OrderDay < (int)today + 1,
-                IsAvailable = !invalidDays.Select(m => m.Date).Contains(weekDays[f.OrderDay].ToPersianDate()),
-                IsReserved = reservedFoodIds.Contains(f.Id)
-            }).ToList();
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
+            IsReserved = personnelFoodsId.Contains(f.Id)
+        }).ToList();
 
     }
 }
@@ -92,6 +74,7 @@ public class FoodListViewModel
     public bool IsReserved { get; set; }
     public bool IsExpired { get; set; }
     public bool IsAvailable { get; set; }
+    public int? ReserveId { get; set; }
 
 
     public int Id { get; set; }
@@ -106,35 +89,56 @@ public class FoodListViewModel
 }
 
 
-//internal interface IFoodListAccess
-//{
-//    Task<bool> HasAccess(int personnelCode);
-//}
-
-//internal class FoodListAccess(AppDbContext context) : IFoodListAccess
-//{
-//    public async Task<bool> HasAccess(int personnelCode)
-//    {
-
-
-//        var personnel = await context.Personnel.FirstOrDefaultAsync(p => p.Active);
-//    }
-//}
-
-public class PersonnelNotAccessFoodListException : Exception;
 
 internal interface IFoodListRepository
 {
-    Task<bool> IsPersonnelActive(int personnelCode,CancellationToken token);
+
+    Task<decimal> GetPersonnelDiscountAsync(int personnelCode, CancellationToken cancellationToken);
+
+    Task<List<int>> GetPersonnelReservesIdAsync(int personnelCode,string startDate, string endDate, CancellationToken cancellationToken);
+
+    Task<List<Food>> GetFoodsAsync(CancellationToken cancellationToken);
 }
-internal class FoodListRepository : IFoodListRepository
+internal class FoodListRepository(AppDbContext context) : IFoodListRepository
 {
-    public async Task<bool> IsPersonnelActive(int personnelCode, CancellationToken token)
+
+
+    public async Task<decimal> GetPersonnelDiscountAsync(int personnelCode, CancellationToken cancellationToken)
     {
-        await context.Personnel.IgnoreQueryFilters()
-            .FirstOrDefaultAsync(p => p.PersonnelCode == request.PersonnelCode, cancellationToken)
+        var personnel = await context.Personnel.AsNoTracking()
+            .FirstOrDefaultAsync(p => p.PersonnelCode == personnelCode, cancellationToken);
+
+        if (personnel == null) throw new Exception();
+
+        return personnel.Discount;
+    }
+
+    public async Task<List<int>> GetPersonnelReservesIdAsync(int personnelCode, string startDate, string endDate, CancellationToken cancellationToken)
+    {
+        return await context.Reserve
+            .Where(r => r.PersonnelCode == personnelCode)
+            .Where(r => string.Compare(r.ReserveDate, startDate) >= 0 && string.Compare(r.ReserveDate, endDate) <= 0)
+            .AsNoTracking()
+            .Select(r => r.FoodId)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<Food>> GetFoodsAsync(CancellationToken cancellationToken)
+    {
+        return await context.Foods
+            .OrderBy(f => f.OrderDay)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
     }
 }
 
 
 
+
+public static class FoodListRegister
+{
+    public static void RegisterFoodList(this IServiceCollection services)
+    {
+        services.AddScoped<IFoodListRepository, FoodListRepository>();
+    }
+}

@@ -6,11 +6,18 @@ namespace Food_Reservation.Database;
 
 public class AppDbContext : DbContext
 {
+
     public DbSet<Food> Foods { get; set; }
-    public DbSet<Reserve> Reserve { get; set; }
-    public DbSet<PersonnelInfo> PersonnelInfo { get; set; }
-    public DbSet<Personnel> Personnel { get; set; }
     public DbSet<MealOffDay> MealOffDay { get; set; }
+
+
+    public DbSet<Reserve> Reserve { get; set; }
+
+
+    public DbSet<Personnel> Personnel { get; set; }
+    public DbSet<PersonnelInfo> PersonnelInfo { get; set; }
+    public DbSet<PersonnelAccess> PersonnelAccess { get; set; }
+
 
     public AppDbContext()
     {
@@ -27,7 +34,6 @@ public class AppDbContext : DbContext
     {
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
-        modelBuilder.ApplyConfiguration(new PersonnelConfig());
 
         base.OnModelCreating(modelBuilder);
     }

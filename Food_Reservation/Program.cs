@@ -1,95 +1,35 @@
 using Food_Reservation.Components;
-using Food_Reservation.ConfigModels;
-using Food_Reservation.Database;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Localization;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Options;
-using System;
-using System.Globalization;
-using System.Reflection;
 using Food_Reservation.Features.Restaurants;
+using Food_Reservation.Setup;
+using Microsoft.Extensions.Options;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Configuration
-    .SetBasePath(Directory.GetCurrentDirectory())
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
-    .AddEnvironmentVariables();
+builder.Configuration.RegisterLog(builder.Environment.EnvironmentName);
 
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 
-builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
+builder.Services.RegisterLocalization();
 
-builder.Services.Configure<RequestLocalizationOptions>(options =>
-{
-    options.DefaultRequestCulture = new RequestCulture("fa");
-    options.SupportedCultures = new List<CultureInfo>
-    {
-        new("fa")
-    };
-    options.SupportedUICultures = new List<CultureInfo>
-    {
-        new("fa")
-    };
-    options.RequestCultureProviders = new List<IRequestCultureProvider>
-    {
-        new QueryStringRequestCultureProvider(),
-        new CookieRequestCultureProvider
-        {
-            CookieName = CookieRequestCultureProvider.DefaultCookieName
-        }
-    };
-});
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
 
-builder.Services.AddMediatR(cfg =>
-    cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly())
-);
+builder.Services.RegisterAuthentication();
 
-builder.Services.AddScoped<IReserveAccess, ReserveAccess>();
+builder.Services.RegisterAuthorization();
 
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options => {
-        options.LoginPath = "/login";
-        options.LogoutPath = "/logout";
-        options.ExpireTimeSpan = TimeSpan.FromDays(60);
-        options.SlidingExpiration = true;
+builder.Services.RegisterDataBase();
 
-        options.Events = new CookieAuthenticationEvents
-        {
-            OnRedirectToLogin = context =>
-            {
-                context.Response.Redirect("/login");
-                return Task.CompletedTask;
-            }
-        };
-    });
+builder.Configuration.RegisterConfigModels();
 
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("AdminOnly", policy =>
-        policy.RequireRole("Admin"));
-});
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-{
-    options.UseSqlServer(
-        ConnectionStringConfigModel.Default,
+builder.Services.RegisterFoodList();
 
-        sqlOptions =>
-        {
-            sqlOptions.EnableRetryOnFailure(
-                maxRetryCount: 5,
-                maxRetryDelay: TimeSpan.FromSeconds(30),
-                errorNumbersToAdd: null
-            );
-        });
+builder.Services.RegisterReserveFood();
 
-});
+builder.Services.RegisterCancelReserve();
 
-builder.Configuration.GetSection("ConnectionStrings").Get<ConnectionStringConfigModel>();
+builder.Services.RegisterShared();
 
 
 var app = builder.Build();
@@ -102,13 +42,12 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-var localizationOptions = app.Services.GetRequiredService<IOptions<RequestLocalizationOptions>>().Value;
-
-app.UseRequestLocalization(localizationOptions);
+app.UseRequestLocalization(app.Services.GetRequiredService<IOptions<RequestLocalizationOptions>>().Value);
 
 app.UseStaticFiles();
 
 app.UseAuthentication();
+
 app.UseAuthorization();
 
 app.UseAntiforgery();
