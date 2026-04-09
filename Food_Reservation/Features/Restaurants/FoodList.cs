@@ -13,6 +13,11 @@ internal class FoodListHandler(IFoodListRepository repository, IOffDaysRepositor
 {
     public async Task<List<FoodListViewModel>> Handle(FoodListRequest request, CancellationToken cancellationToken)
     {
+
+        if (request.PageId > 1 || request.PageId < -1) request = request with { PageId = 0 };
+
+
+
         //IS ACTIVE  
 
         var isActive = await personnelRepository.IsActive(request.PersonnelCode,cancellationToken);
@@ -32,9 +37,9 @@ internal class FoodListHandler(IFoodListRepository repository, IOffDaysRepositor
 
         var discount = await repository.GetPersonnelDiscountAsync(request.PersonnelCode,cancellationToken);
 
-        var startOfWeek = PersianDateTime.GetPersianDateByWeekDay(0);
+        var startOfWeek = PersianDateTime.GetPersianWeekStartDate(request.PageId);
 
-        var endOfWeek = PersianDateTime.GetPersianDateByWeekDay(6);
+        var endOfWeek = PersianDateTime.GetPersianWeekEndDate(request.PageId);
 
 
         var personnelFoodsId = await repository
@@ -43,7 +48,6 @@ internal class FoodListHandler(IFoodListRepository repository, IOffDaysRepositor
         var weekFoods = await repository.GetFoodsAsync(cancellationToken);
 
         var invalidDays = await offDaysRepository.GetOffDaysAsync(cancellationToken);
-
 
         return weekFoods.Select(f => new FoodListViewModel
         {
@@ -55,11 +59,14 @@ internal class FoodListHandler(IFoodListRepository repository, IOffDaysRepositor
             ImageUrl = f.ImageUrl,
             Price = f.Price,
 
+            ReserveId = ,
+
             DiscountedPrice = Convert.ToInt32(f.Price) * (100 - discount) / 100,
 
-            Date = PersianDateTime.GetPersianDateByWeekDay(f.OrderDay),
+            Date = PersianDateTime.GetPersianDateByWeekDay(f.OrderDay,request.PageId),
 
-            IsExpired = f.OrderDay < (int)PersianDateTime.GetTodayWeekDay() + 1,
+            IsExpired = request.PageId < 0 || // هفته قبل = expired
+                        (request.PageId == 0 && f.OrderDay - 1 <= PersianDateTime.Today),
 
             IsAvailable = !invalidDays.Contains(PersianDateTime.GetPersianDateByWeekDay(f.OrderDay)),
 

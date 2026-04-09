@@ -22,7 +22,7 @@
         </p>
     </div>
 
-    <div class="row g-4" id="foodList">
+    <div class="row g-4">
         @foreach (var food in Foods)
         {
 
@@ -114,21 +114,63 @@
             </div>
         }
     </div>
-</div>
 
+
+
+
+
+    <div class="row justify-content-center">
+
+        <nav aria-label="پیمایش هفته‌ها">
+            <ul class="pagination custom-pagination p-0">
+@*                 <li class="page-item">
+                    <a class="page-link" href="#week-prev" aria-label="قبلی">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li> *@
+                <li class="page-item @(_pageId == -1 ? "active" : "")">
+                    <button class="page-link " @onclick="() => ChangePage(-1)">هفته قبل</button>
+                </li>
+                <li class="page-item @(_pageId == 0 ? "active" : "")">
+                    <button class="page-link " @onclick="() => ChangePage(0)">هفته جاری</button>
+                </li>
+
+                <li class="page-item @(_pageId == 1 ? "active" : "")">
+                    <button class="page-link " @onclick="() => ChangePage(1)">هفته بعد</button>
+                </li>
+@*                 <li class="page-item">
+                    <a class="page-link" href="#week-next" aria-label="بعدی">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li> *@
+            </ul>
+        </nav>
+    </div>
+
+</div>
 
 
 @inject IMediator Mediator
 @code
 {
-    private int _userId = 436;
+    private readonly int _userId = 436;
+    private int _pageId;
+
     public List<FoodListViewModel> Foods { get; set; } = new();
 
-    protected override async Task OnInitializedAsync()
+    private async Task ChangePage(int pageId)
+    {
+        _pageId = pageId;
+        await LoadAsync(_pageId);
+
+    }
+
+
+    private async Task LoadAsync(int pageId = 0)
     {
         try
         {
-            Foods = await Mediator.Send(new FoodListRequest(_userId));
+            Foods = await Mediator.Send(new FoodListRequest(_userId, pageId));
 
         }
         catch (PersonnelFiredException e)
@@ -149,6 +191,10 @@
         {
 
         }
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync(_pageId);
 
         await base.OnInitializedAsync();
     }
@@ -178,7 +224,7 @@
 
                 try
                 {
-                    await Mediator.Send(new ReserveFoodRequest(food.Id, _userId));
+                    await Mediator.Send(new ReserveFoodRequest(food.Id, _userId,_pageId));
                 }
                 catch (Exception e)
                 {

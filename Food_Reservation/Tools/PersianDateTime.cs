@@ -24,22 +24,27 @@ public static class PersianDateTime
     }
 
 
-    public static DayOfWeek Today => DateTime.Now.DayOfWeek + 2;
 
-    public static DayOfWeek GetTodayWeekDay()
-    {
-        return Today;
-    }
+    public static int Today => GetPersianDayOfWeek(DateTime.Now.DayOfWeek);
+
     public static string GetTodayPersianDate()
     {
-        return GetPersianDateByWeekDay((int)Today);
+        return GetPersianDateByWeekDay((int)DateTime.Now.DayOfWeek);
     }
 
-    public static string GetPersianDateByWeekDay(int day)
+
+    public static int GetPersianDayOfWeek(DayOfWeek dayOfWeek)
     {
-        var daysToSaturday = Today == DayOfWeek.Sunday ? 6 : (int)Today;
-        
-        var startOfWeekDate = DateTime.Now.AddDays(-daysToSaturday).Date;
+        int standardIndex = (int)dayOfWeek;
+        return (standardIndex + 1) % 7;
+    }
+
+
+
+    public static string GetPersianDateByWeekDay(int day, int weekOffset = 0)
+    {
+        var daysToSaturday = Today == (int)DayOfWeek.Friday ? 6 : Today;
+        var startOfWeekDate = DateTime.Now.AddDays(-daysToSaturday + (weekOffset * 7)).Date;
 
         var weekDays = new List<DateTime>
         {
@@ -53,5 +58,24 @@ public static class PersianDateTime
         };
 
         return weekDays[day].ToPersianDate();
+    }
+
+
+
+    public static string GetPersianWeekStartDate(int weekOffset)
+    {
+
+        var daysToSaturday = Today == (int)DayOfWeek.Friday ? 6 : Today;
+
+        var currentWeekStart = DateTime.Now.AddDays(-daysToSaturday).Date;
+        var weekStartDate = currentWeekStart.AddDays(weekOffset * 7);
+        return weekStartDate.ToPersianDate();
+    }
+    public static string GetPersianWeekEndDate(int weekOffset)
+    {
+
+        var daysToSaturday = Today == (int)DayOfWeek.Friday ? 6 : Today; var currentWeekStart = DateTime.Now.AddDays(-daysToSaturday).Date;
+        var weekEndDate = currentWeekStart.AddDays(weekOffset * 7 + 6);
+        return weekEndDate.ToPersianDate();
     }
 }

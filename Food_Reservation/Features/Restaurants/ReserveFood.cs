@@ -8,7 +8,7 @@ using System.Globalization;
 
 namespace Food_Reservation.Features.Restaurants;
 
-public record ReserveFoodRequest(int FoodId, int PersonnelCode) : IRequest;
+public record ReserveFoodRequest(int FoodId, int PersonnelCode,int Week) : IRequest;
 
 internal class ReserveFoodHandler(IReserveFoodAccess reserveFoodAccess, IReserveFoodRepository repository, IPersonnelRepository personnelRepository) : IRequestHandler<ReserveFoodRequest>
 {
@@ -39,7 +39,7 @@ internal class ReserveFoodHandler(IReserveFoodAccess reserveFoodAccess, IReserve
 
         //CAN RESERVE
 
-        var reserveDate = PersianDateTime.GetPersianDateByWeekDay(food.OrderDay);
+        var reserveDate = PersianDateTime.GetPersianDateByWeekDay(food.OrderDay, request.Week);
 
         if (!await reserveFoodAccess.CanReserve(reserveDate, cancellationToken)) throw new ReserveAccessException();
 
