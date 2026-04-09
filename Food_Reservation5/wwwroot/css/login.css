@@ -1,0 +1,109 @@
+﻿
+
+.login-box {
+    width: 420px;
+    margin: 40px auto;
+    background: white;
+    border-radius: 12px;
+    padding: 40px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid var(--border-gray);
+    transition: all 0.3s ease;
+}
+
+    .login-box:hover {
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        transform: translateY(-2px);
+    }
+
+.logo {
+    width: 150px;
+    background: var(--primary-red);
+    border-radius: 16px;
+    margin: 0 auto 20px;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.form-control {
+    border: 2px solid var(--border-gray);
+    border-radius: 8px;
+    padding: 14px 16px;
+    transition: all 0.3s ease;
+    font-size: 16px;
+}
+
+    .form-control:focus {
+        border-color: var(--primary-red);
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.15);
+        transform: scale(1.01);
+    }
+
+.btn-main {
+    background: var(--primary-red);
+    border: none;
+    border-radius: 8px;
+    padding: 14px;
+    font-weight: 600;
+    color: white;
+    width: 100%;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+}
+
+    .btn-main:hover:not(:disabled) {
+        background: var(--red-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
+    }
+
+.btn-secondary {
+    border: 2px solid var(--border-gray);
+    color: #6c757d;
+    border-radius: 8px;
+    padding: 12px;
+    width: 100%;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+    .btn-secondary:hover {
+        background: var(--primary-red);
+        border-color: var(--primary-red);
+        color: white;
+        transform: translateY(-1px);
+    }
+
+.phone-section,
+.otp-section {
+    display: none;
+}
+
+    .phone-section.active,
+    .otp-section.active {
+        display: block;
+        animation: slideIn 0.4s ease;
+    }
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.input-group-text {
+    background: white !important;
+    border: 2px solid var(--border-gray) !important;
+    border-left: none !important;
+}

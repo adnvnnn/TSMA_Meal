@@ -1,0 +1,24 @@
+﻿:root {
+    --primary-red: #dc3545;
+    --red-hover: #c82333;
+    --light-gray: #f8f9fa;
+    --border-gray: #dee2e6;
+}
+
+* {
+    font-family: 'Vazirmatn', sans-serif;
+}
+
+body {
+    background: var(--light-gray);
+    padding-top: 90px;
+    padding-bottom: 90px;
+}
+
+@font-face {
+    font-family: 'Vazir-Light';
+    src: url('../fonts/Vazir-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}

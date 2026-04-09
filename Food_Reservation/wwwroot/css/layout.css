@@ -1,0 +1,25 @@
+﻿:root {
+    --primary-red: #dc3545;
+    --red-hover: #c82333;
+    --light-gray: #f8f9fa;
+    --border-gray: #dee2e6;
+}
+
+* {
+    font-family: 'Yekan_Bakh_Fanum_Regular', sans-serif;
+    line-height: 1;
+}
+
+body {
+    background: var(--light-gray);
+    padding-top: 90px;
+    padding-bottom: 90px;
+}
+
+@font-face {
+    font-family: 'Yekan_Bakh_Fanum_Regular';
+    src: url('../fonts/Yekan_Bakh_Fanum_Regular.TTF') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}

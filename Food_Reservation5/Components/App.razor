@@ -1,0 +1,30 @@
+﻿@using Food_Reservation.Components.Layout
+@inject IStringLocalizer<App> Localizer
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/" />
+
+    <title>@Localizer["Title"].Value</title>
+    <link href="bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="app.css" />
+    
+    <Favicon></Favicon>
+
+    <link href="css/layout.css" rel="stylesheet">
+    <link href="css/home.css" rel="stylesheet">
+    <link href="css/login.css" rel="stylesheet">
+    <HeadOutlet @rendermode="new InteractiveServerRenderMode(prerender: false)" />
+
+</head>
+
+<body class="d-flex align-items-center justify-content-center min-vh-100">
+
+<Routes @rendermode="new InteractiveServerRenderMode(prerender: false)" />
+
+    <script src="_framework/blazor.web.js"></script>
+</body>
+
+</html>

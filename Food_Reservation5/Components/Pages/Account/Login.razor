@@ -1,0 +1,80 @@
+﻿@page "/login"
+@using Food_Reservation.Components.Layout
+@layout AccountLayout
+
+@inject IStringLocalizer<Login> Localizer
+
+<div class="login-box">
+    <div class="text-center mb-4">
+        <div class="logo">
+            <img alt="" src="images/tsma-origin.webp" class="w-100"/>
+        </div>
+        <h4 class="mb-2 fw-bold text-dark">@Localizer["PersonnelPortal"].Value</h4>
+        <p class="text-muted mb-0">
+            @Localizer["TsmaCompany"].Value
+        </p>
+    </div>
+
+    <div id="phoneSection" class="phone-section active">
+        <label class="form-label fw-500 mb-3 d-block text-dark">
+            @Localizer["PhoneNumber"].Value
+        </label>
+        <div class="input-group mb-4">
+            <input type="tel" class="form-control " id="phoneInput" placeholder="09123456789" value="09123456789" maxlength="11">
+        </div>
+        <button class="btn-main mb-3" onclick="sendOTP()">
+            @Localizer["SendCode"].Value
+        </button>
+        <hr />
+
+        <small class="text-muted d-block text-center">
+            @Localizer["Example"].Value
+        </small>
+    </div>
+
+    <div id="otpSection" class="otp-section">
+        <label class="form-label fw-500 mb-3 d-block text-dark">
+            @Localizer["Code"].Value
+        </label>
+        <div class="input-group mb-4">
+            <input type="text" class="form-control text-center fs-4 fw-bold" id="otpInput" maxlength="6">
+        </div>
+        <button class="btn-main mb-3" onclick="verifyOTP()">
+            @Localizer["Enter"].Value
+        </button>
+        <button class="btn-secondary" onclick="showPhone()">
+            @Localizer["ChangeNumber"].Value
+        </button>
+        
+        <hr/>
+        <small class="text-muted d-block text-center">
+            09146271035
+        </small>
+    </div>
+</div>
+
+<script>
+    function sendOTP() {
+        const phone = document.getElementById('phoneInput').value;
+        if (phone.length === 11 && phone.startsWith('09')) {
+            document.getElementById('phoneSection').classList.remove('active');
+            document.getElementById('otpSection').classList.add('active');
+        } else {
+            alert('شماره معتبر وارد کنید');
+        }
+    }
+
+    function verifyOTP() {
+        if (document.getElementById('otpInput').value === '1234') {
+            localStorage.setItem('phone', document.getElementById('phoneInput').value);
+            window.location.href = '/';
+        } else {
+            alert('کد اشتباه است!');
+        }
+    }
+
+    function showPhone() {
+        document.getElementById('otpSection').classList.remove('active');
+        document.getElementById('phoneSection').classList.add('active');
+    }
+</script>
