@@ -117,17 +117,23 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="Current" xml:space="preserve">
+    <value>هفته جاری</value>
+  </data>
   <data name="Expired" xml:space="preserve">
     <value>زمان تمام شده ⏰ </value>
-  </data>
-  <data name="FoodMenu" xml:space="preserve">
-    <value>منوی غذای هفته</value>
   </data>
   <data name="HasBeenNotReserved" xml:space="preserve">
     <value>رزرو نشده</value>
   </data>
   <data name="HasBeenReserved" xml:space="preserve">
     <value>رزرو شده</value>
+  </data>
+  <data name="Next" xml:space="preserve">
+    <value>هفته بعد</value>
+  </data>
+  <data name="Prev" xml:space="preserve">
+    <value>هفته قبل</value>
   </data>
   <data name="Reserve" xml:space="preserve">
     <value>رزرو کنید ➕</value>
@@ -146,5 +152,8 @@
   </data>
   <data name="UnAvailable" xml:space="preserve">
     <value>رزرو امکان پذیر نمیباشد</value>
+  </data>
+  <data name="FoodMenu" xml:space="preserve">
+    <value>منوی غذای هفته</value>
   </data>
 </root>

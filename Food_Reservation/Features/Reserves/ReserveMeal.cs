@@ -1,12 +1,12 @@
-﻿using Food_Reservation.Database;
-using Food_Reservation.Entities;
-using Food_Reservation.Shared;
-using Food_Reservation.Tools;
+﻿using System.Globalization;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using System.Globalization;
+using TSMA_Meal.Database;
+using TSMA_Meal.Entities;
+using TSMA_Meal.Shared;
+using TSMA_Meal.Tools;
 
-namespace Food_Reservation.Features.Restaurants;
+namespace TSMA_Meal.Features.Reserves;
 
 public record ReserveFoodRequest(int FoodId, int PersonnelCode,int Week) : IRequest;
 
@@ -31,15 +31,15 @@ internal class ReserveFoodHandler(IReserveFoodAccess reserveFoodAccess, IReserve
 
         //GET FOOD
 
-        var food = await repository.GetFoodAsync(request.FoodId, cancellationToken);
+        var meal = await repository.GetMealAsync(request.FoodId, cancellationToken);
 
-        if (food == null) return /*TODO:Log FATAL*/;
+        if (meal == null) return /*TODO:Log FATAL*/;
 
 
 
         //CAN RESERVE
 
-        var reserveDate = PersianDateTime.GetPersianDateByWeekDay(food.OrderDay, request.Week);
+        var reserveDate = PersianDateTime.GetPersianDateByWeekDay(meal.OrderDay, request.Week);
 
         if (!await reserveFoodAccess.CanReserve(reserveDate, cancellationToken)) throw new ReserveAccessException();
 
@@ -71,16 +71,16 @@ internal class ReserveFoodHandler(IReserveFoodAccess reserveFoodAccess, IReserve
 
         //NEW RESERVE
 
-        var priceForUser = (Convert.ToInt32(food.Price) * (100 - personnel.Discount) / 100).ToString(CultureInfo.InvariantCulture);
+        var priceForUser = (Convert.ToInt32(meal.Price) * (100 - personnel.Discount) / 100).ToString(CultureInfo.InvariantCulture);
 
         var reserve = new Reserve
         {
-            FoodId = request.FoodId,
+            MealId = request.FoodId,
             PersonnelCode = request.PersonnelCode,
 
             ReserveDate = reserveDate,
-            DayName = food.Day,
-            PriceFood = food.Price,
+            DayName = meal.Day,
+            PriceFood = meal.Price,
             PriceForUser = priceForUser,
             PercentOff = personnel.Discount.ToString(CultureInfo.InvariantCulture),
             TimeReserve = DateTime.Now.ToPersianDateTime(),
@@ -109,7 +109,7 @@ internal class ReserveFoodAccess(IOffDaysRepository offDaysRepository) : IReserv
 {
     public async Task<bool> CanReserve(string foodDate, CancellationToken cancellationToken)
     {
-        var today = PersianDateTime.GetTodayPersianDate();
+        var today = PersianDateTime.GetPersianDateByWeekDay((int)DateTime.Now.DayOfWeek);
 
         //IF IS EXPIRED
         //EX: foodDate = "1403/01/10"، today = "1403/01/11" => ANSWER: TRUE => return FALSE
@@ -129,7 +129,7 @@ internal class ReserveFoodAccess(IOffDaysRepository offDaysRepository) : IReserv
 
 internal interface IReserveFoodRepository
 {
-    Task<Food?> GetFoodAsync(int id, CancellationToken cancellationToken);
+    Task<Meal?> GetMealAsync(int id, CancellationToken cancellationToken);
     Task<Reserve?> GetCanceledReserveAsync(int personnelCode, string reserveDate, CancellationToken cancellationToken);
 
 
@@ -141,9 +141,9 @@ internal interface IReserveFoodRepository
 internal class ReserveFoodRepository(AppDbContext context) : IReserveFoodRepository
 {
 
-    public async Task<Food?> GetFoodAsync(int id, CancellationToken cancellationToken)
+    public async Task<Meal?> GetMealAsync(int id, CancellationToken cancellationToken)
     {
-        return await context.Foods.AsNoTracking().FirstOrDefaultAsync(f => f.Id == id, cancellationToken);
+        return await context.Meals.AsNoTracking().FirstOrDefaultAsync(f => f.Id == id, cancellationToken);
     }
 
 

@@ -1,11 +1,12 @@
-﻿using Food_Reservation.Database;
-using Food_Reservation.Entities;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using TSMA_Meal.Database;
+using TSMA_Meal.Entities;
 
-namespace Food_Reservation.Shared;
+namespace TSMA_Meal.Shared;
 
 public interface IPersonnelRepository
 {
+    Task<bool> GetPersonnelByPhoneAsync(string phone, CancellationToken cancellationToken);
     Task<Personnel?> GetPersonnelAsync(int personnelCode, CancellationToken cancellationToken);
     Task<bool> PersonnelHasAccess(int personnelCode);
     Task<bool> IsActive(int personnelCode, CancellationToken cancellationToken);
@@ -15,6 +16,22 @@ public interface IPersonnelRepository
 
 public class PersonnelRepository(AppDbContext context) : IPersonnelRepository
 {
+    public async Task<bool> GetPersonnelByPhoneAsync(string phone, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await context.Personnel
+                .AsNoTracking()
+                .AnyAsync(p => context.PersonnelInfo.Count(pi => pi.Phone == phone && pi.Id == p.PersonnelCode) > 0,
+                    cancellationToken: cancellationToken);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
     public async Task<Personnel?> GetPersonnelAsync(int personnelCode, CancellationToken cancellationToken)
     {
         return await context.Personnel.IgnoreQueryFilters().AsNoTracking()

@@ -1,11 +1,11 @@
-﻿using Food_Reservation.Entities.Common;
+﻿using TSMA_Meal.Entities.Common;
 
-namespace Food_Reservation.Entities;
+namespace TSMA_Meal.Entities;
 
 public class Reserve : BaseEntity
 {
     public int PersonnelCode { get; set; }
-    public int FoodId { get; set; }
+    public int MealId { get; set; }
     public string ReserveDate { get; set; }
 
     public string? DayName { get; set; }

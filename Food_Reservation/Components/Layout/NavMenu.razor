@@ -2,12 +2,28 @@
 <nav class="navbar navbar-expand-lg fixed-top py-2">
     <div class="container">
         <a class="navbar-brand fw-bold fs-5 d-flex align-items-center">
-            <div class="d-flex align-items-center justify-content-center text-white bg-danger rounded me-0 ms-2" style="width:36px;height:36px;font-size:16px;">
-                🍽️
+            <div class="d-flex align-items-end justify-content-start">
+                <div class="ms-2" style="width:80px;">
+                    <img class="w-100" alt="" src="images/tsma-origin.webp"/>
+                </div>
+                <div class="mb-2">
+                    @SharedLocalizer["ReserveFood"].Value
+
+                </div>
             </div>
-            @SharedLocalizer["ReserveFood"].Value
+
+
         </a>
-        <span class="navbar-text fw-500 me-3" >عدنان عبداله زاده</span>
-        <a href="login.html" class="btn btn-outline-danger btn-sm">خروج</a>
+        <span class="navbar-text fw-500" >عدنان عبداله زاده</span>
+        <a @onclick="() => Logout()" class="btn btn-outline-danger btn-sm">خروج</a>
     </div>
 </nav>
+
+@code
+{
+    private void Logout()
+    {
+        NavigationManager.NavigateTo("/login", forceLoad: true);
+
+    }
+}

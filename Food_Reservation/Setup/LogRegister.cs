@@ -1,4 +1,4 @@
-﻿namespace Food_Reservation.Setup;
+﻿namespace TSMA_Meal.Setup;
 
 public static class LogRegister
 {

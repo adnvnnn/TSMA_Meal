@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication.Cookies;
 
-namespace Food_Reservation.Setup;
+namespace TSMA_Meal.Setup;
 
 public static class AuthenticationRegister
 {

@@ -1,21 +1,14 @@
-﻿@inject IStringLocalizer<Home> Localizer
+﻿@page "/"
+@inject IStringLocalizer<Home> Localizer
 @inject NavigationManager Navigation
-
-@page "/"
-
-@using Food_Reservation.Features.Restaurants
-@using Food_Reservation.Shared
-@using Food_Reservation.Tools
-@using MediatR
-@* @attribute [Authorize]
- *@
+@attribute [Authorize]
 
 <div class="container">
     <div class="header-box text-center">
         <h2 class="fw-bold text-dark mb-3">
             @Localizer["FoodMenu"].Value
 
-            <span class="badge bg-danger ms-2">به‌روز</span>
+            <span class="badge bg-danger ms-2">@_currentWeek</span>
         </h2>
         <p class="text-muted mb-3">
             @Localizer["SelectFood"].Value
@@ -23,7 +16,7 @@
     </div>
 
     <div class="row g-4">
-        @foreach (var food in Foods)
+        @foreach (var food in Meals)
         {
 
             var status = food.IsExpired || !food.IsAvailable ? "expired" : (food.IsReserved ? "reserved" : "available");
@@ -33,7 +26,7 @@
                 <div class="card food-card position-relative  @status  h-100">
                     <div class="status-dot"></div>
 
-                    <img src="@food.ImageUrl" class="food-img @(food.IsExpired ? "img-expired" : "")" alt="@food.Name">
+                    <img src="@food.ImageUrl" class="food-img" alt="@food.Name">
 
                     <div class="card-body p-4">
 
@@ -66,10 +59,6 @@
                         </div>
 
                         <div class="text-muted small mb-3">@food.Day - @food.Date</div>
-
-                        @*                         <div class="h5 text-danger fw-bold mb-4">
-                            @PriceFormat.FormatNumber(food.Price) @Localizer["Rial"].Value
-                        </div> *@
 
                         <div class="mb-4">
                             <span class="h5 text-muted text-decoration-line-through mx-2">
@@ -117,32 +106,20 @@
 
 
 
-
-
     <div class="row justify-content-center">
 
-        <nav aria-label="پیمایش هفته‌ها">
+        <nav>
             <ul class="pagination custom-pagination p-0">
-@*                 <li class="page-item">
-                    <a class="page-link" href="#week-prev" aria-label="قبلی">
-                        <span aria-hidden="true">&laquo;</span>
-                    </a>
-                </li> *@
                 <li class="page-item @(_pageId == -1 ? "active" : "")">
-                    <button class="page-link " @onclick="() => ChangePage(-1)">هفته قبل</button>
+                    <button class="page-link " @onclick="() => ChangePage(-1)">@Localizer["Prev"].Value</button>
                 </li>
                 <li class="page-item @(_pageId == 0 ? "active" : "")">
-                    <button class="page-link " @onclick="() => ChangePage(0)">هفته جاری</button>
+                    <button class="page-link " @onclick="() => ChangePage(0)">@Localizer["Current"].Value</button>
                 </li>
 
                 <li class="page-item @(_pageId == 1 ? "active" : "")">
-                    <button class="page-link " @onclick="() => ChangePage(1)">هفته بعد</button>
+                    <button class="page-link " @onclick="() => ChangePage(1)">@Localizer["Next"].Value</button>
                 </li>
-@*                 <li class="page-item">
-                    <a class="page-link" href="#week-next" aria-label="بعدی">
-                        <span aria-hidden="true">&raquo;</span>
-                    </a>
-                </li> *@
             </ul>
         </nav>
     </div>
@@ -150,19 +127,27 @@
 </div>
 
 
-@inject IMediator Mediator
 @code
 {
     private readonly int _userId = 436;
     private int _pageId;
+    private string _currentWeek = "";
 
-    public List<FoodListViewModel> Foods { get; set; } = new();
+    public List<MealsViewModel> Meals { get; set; } = new();
 
     private async Task ChangePage(int pageId)
     {
         _pageId = pageId;
+
         await LoadAsync(_pageId);
 
+        _currentWeek = pageId switch
+        {
+            0 => Localizer["Current"].Value,
+            1 => Localizer["Next"].Value,
+            -1 => Localizer["Prev"].Value,
+            _ => _currentWeek
+        };
     }
 
 
@@ -170,8 +155,8 @@
     {
         try
         {
-            Foods = await Mediator.Send(new FoodListRequest(_userId, pageId));
-
+            Meals = await Mediator.Send(new MealsListRequest(_userId, pageId));
+            _currentWeek = Localizer["Current"].Value;
         }
         catch (PersonnelFiredException e)
         {
@@ -199,7 +184,7 @@
         await base.OnInitializedAsync();
     }
 
-    private async Task ReserveAsync(FoodListViewModel food)
+    private async Task ReserveAsync(MealsViewModel food)
     {
         @if (food is { IsExpired: false, IsAvailable: true })
         {
@@ -209,7 +194,7 @@
 
                 try
                 {
-                    await Mediator.Send(new CancelReserveRequest(food.Id, _userId));
+                    await Mediator.Send(new CancelReserveRequest(food.ReserveId, _userId));
 
                 }
                 catch (Exception e)

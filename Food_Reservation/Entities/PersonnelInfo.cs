@@ -1,6 +1,6 @@
-﻿using Food_Reservation.Entities.Common;
+﻿using TSMA_Meal.Entities.Common;
 
-namespace Food_Reservation.Entities;
+namespace TSMA_Meal.Entities;
 
 public class PersonnelInfo : BaseEntity
 {

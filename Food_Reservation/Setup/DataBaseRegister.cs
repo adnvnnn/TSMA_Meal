@@ -1,8 +1,8 @@
-﻿using Food_Reservation.ConfigModels;
-using Food_Reservation.Database;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using TSMA_Meal.ConfigModels;
+using TSMA_Meal.Database;
 
-namespace Food_Reservation.Setup;
+namespace TSMA_Meal.Setup;
 
 public static class DataBaseRegister
 {

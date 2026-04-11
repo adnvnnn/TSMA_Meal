@@ -1,4 +1,4 @@
-﻿namespace Food_Reservation.Entities.Common;
+﻿namespace TSMA_Meal.Entities.Common;
 
 public class BaseEntity
 {

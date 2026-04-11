@@ -1,11 +1,11 @@
-﻿using Food_Reservation.Database;
-using Food_Reservation.Entities;
-using Food_Reservation.Shared;
-using Food_Reservation.Tools;
-using MediatR;
+﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
+using TSMA_Meal.Database;
+using TSMA_Meal.Entities;
+using TSMA_Meal.Shared;
+using TSMA_Meal.Tools;
 
-namespace Food_Reservation.Features.Restaurants;
+namespace TSMA_Meal.Features.Reserves;
 
 public record CancelReserveRequest(int ReserveId,int PersonnelCode) : IRequest;
 
@@ -13,6 +13,9 @@ public class CancelReserveHandler(ICancelReserveAccess cancelReserveAccess,ICanc
 {
     public async Task Handle(CancelReserveRequest request, CancellationToken cancellationToken)
     {
+        if (request.ReserveId == 0) return;
+        
+
         //IS PERSONNEL ACTIVE
 
         var personnel = await personnelRepository.GetPersonnelAsync(request.PersonnelCode, cancellationToken);
@@ -41,7 +44,7 @@ public class CancelReserveHandler(ICancelReserveAccess cancelReserveAccess,ICanc
 
         //CAN RESERVE
 
-        if (cancelReserveAccess.CanCancel(reserve.ReserveDate)) return /*TODO:Log FATAL*/;
+        if (!cancelReserveAccess.CanCancel(reserve.ReserveDate)) return /*TODO:Log FATAL*/;
 
 
         //IF CANCELED BEFORE 
@@ -66,7 +69,7 @@ internal class CancelReserveAccess : ICancelReserveAccess
 {
     public bool CanCancel(string foodDate)
     {
-        var today = PersianDateTime.GetTodayPersianDate();
+        var today = PersianDateTime.GetPersianDateByWeekDay((int)DateTime.Now.DayOfWeek);
 
         //IF IS EXPIRED
         //EX: foodDate = "1403/01/10"، today = "1403/01/11" => ANSWER: TRUE => return FALSE

@@ -6,8 +6,14 @@
 @using static Microsoft.AspNetCore.Components.Web.RenderMode
 @using Microsoft.AspNetCore.Components.Web.Virtualization
 @using Microsoft.JSInterop
-@using Food_Reservation
-@using Food_Reservation.Components
+@using TSMA_Meal.Components
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<SharedResource> SharedLocalizer
 @using Microsoft.AspNetCore.Authorization
+@using MediatR
+@using TSMA_Meal.Features.Reserves
+@using TSMA_Meal.Shared
+@using TSMA_Meal.Tools
+@inject IMediator Mediator
+@using TSMA_Meal.Components.Layout
+@inject NavigationManager NavigationManager

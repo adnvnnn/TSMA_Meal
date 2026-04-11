@@ -1,4 +1,4 @@
-﻿namespace Food_Reservation.Shared;
+﻿namespace TSMA_Meal.Shared;
 
 public class NotPermittedException : Exception
 {

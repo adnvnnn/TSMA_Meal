@@ -1,7 +1,7 @@
-﻿using Food_Reservation.Database;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using TSMA_Meal.Database;
 
-namespace Food_Reservation.Shared;
+namespace TSMA_Meal.Shared;
 
 public interface IOffDaysRepository
 {

@@ -1,4 +1,4 @@
-﻿namespace Food_Reservation.Tools;
+﻿namespace TSMA_Meal.Tools;
 
 public static class PriceFormat
 {

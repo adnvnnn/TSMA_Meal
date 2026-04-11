@@ -1,8 +1,9 @@
-using Food_Reservation.Components;
-using Food_Reservation.Features.Restaurants;
-using Food_Reservation.Setup;
 using Microsoft.Extensions.Options;
 using System.Reflection;
+using TSMA_Meal.Components;
+using TSMA_Meal.Features.Account;
+using TSMA_Meal.Features.Reserves;
+using TSMA_Meal.Setup;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,7 +24,9 @@ builder.Services.RegisterDataBase();
 builder.Configuration.RegisterConfigModels();
 
 
-builder.Services.RegisterFoodList();
+builder.Services.RegisterSendOtp();
+
+builder.Services.RegisterMealsList();
 
 builder.Services.RegisterReserveFood();
 

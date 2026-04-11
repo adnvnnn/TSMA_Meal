@@ -1,6 +1,6 @@
-﻿using Food_Reservation.Shared;
+﻿using TSMA_Meal.Shared;
 
-namespace Food_Reservation.Setup;
+namespace TSMA_Meal.Setup;
 
 public static class SharedRegister
 {
@@ -9,5 +9,7 @@ public static class SharedRegister
         services.AddScoped<IPersonnelRepository, PersonnelRepository>();
 
         services.AddScoped<IOffDaysRepository, OffDaysRepository>();
+
+        services.AddScoped<IOtpRepository, OtpRepository>();
     }
 }

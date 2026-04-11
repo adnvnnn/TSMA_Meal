@@ -1,8 +1,8 @@
-﻿using Food_Reservation.Entities;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using TSMA_Meal.Entities;
 
-namespace Food_Reservation.Database.Configs;
+namespace TSMA_Meal.Database.Configs;
 
 public class ReserveConfig : IEntityTypeConfiguration<Reserve>
 {
@@ -14,7 +14,7 @@ public class ReserveConfig : IEntityTypeConfiguration<Reserve>
 
         builder.Property(f => f.ReserveDate).HasColumnName("DateReserve");
 
-        builder.Property(f => f.FoodId).HasColumnName("FoodID");
+        builder.Property(f => f.MealId).HasColumnName("FoodID");
 
     }
 }

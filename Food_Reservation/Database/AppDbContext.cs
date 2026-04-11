@@ -1,13 +1,12 @@
-﻿using Food_Reservation.Database.Configs;
-using Food_Reservation.Entities;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using TSMA_Meal.Entities;
 
-namespace Food_Reservation.Database;
+namespace TSMA_Meal.Database;
 
 public class AppDbContext : DbContext
 {
 
-    public DbSet<Food> Foods { get; set; }
+    public DbSet<Meal> Meals { get; set; }
     public DbSet<MealOffDay> MealOffDay { get; set; }
 
 

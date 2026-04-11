@@ -1,4 +1,4 @@
-﻿namespace Food_Reservation.ConfigModels;
+﻿namespace TSMA_Meal.ConfigModels;
 
 public class ConnectionStringConfigModel
 {
