@@ -1,30 +1,51 @@
-﻿namespace TSMA_Meal.Shared
+﻿using Azure.Core;
+using Microsoft.Extensions.Caching.Memory;
+using System;
+
+namespace TSMA_Meal.Shared
 {
     public interface IOtpRepository
     {
-        Task AddAsync(string phone, string code);
+        void Add(string phone, string code, TimeSpan window);
 
-        Task<string?> GetAsync(string phone);
+        string? Get(string phone);
 
-        Task DeleteAsync(string phone);
+        void Delete(string phone);
+
+        void AddAttempt(string phone);
+
+        int GetAttemptCount(string phone);
 
     }
 
-    public class OtpRepository : IOtpRepository
+    public class OtpRepository(IMemoryCache cache) : IOtpRepository
     {
-        public Task AddAsync(string phone, string code)
+        public void Add(string phone, string code, TimeSpan window)
         {
-            throw new NotImplementedException();
+            cache.Set(phone, code, window);
         }
 
-        public Task<string?> GetAsync(string phone)
+        public string? Get(string phone)
         {
-            throw new NotImplementedException();
+            cache.TryGetValue(phone, out string? hashedCode);
+            return hashedCode;
         }
 
-        public Task DeleteAsync(string phone)
+        public void Delete(string phone)
         {
-            throw new NotImplementedException();
+            cache.Remove(phone);
+        }
+
+        public void AddAttempt(string phone)
+        {
+            var current = GetAttemptCount(phone);
+
+            cache.Set($"rate:{phone}", current + 1, TimeSpan.FromMinutes(15));
+        }
+
+        public int GetAttemptCount(string phone)
+        {
+            return cache.Get<int>($"rate:{phone}");
         }
     }
 

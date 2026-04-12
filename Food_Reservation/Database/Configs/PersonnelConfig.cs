@@ -24,5 +24,10 @@ public class PersonnelConfig : IEntityTypeConfiguration<Personnel>
             );
 
         builder.HasQueryFilter(p => p.Active);
+
+        builder.Property(u => u.Name).HasColumnName("Names");
+
+        builder.Property(u => u.LastName).HasColumnName("FamilyName");
+
     }
 }

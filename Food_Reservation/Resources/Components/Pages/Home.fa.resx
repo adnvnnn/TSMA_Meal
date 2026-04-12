@@ -121,7 +121,7 @@
     <value>هفته جاری</value>
   </data>
   <data name="Expired" xml:space="preserve">
-    <value>زمان تمام شده ⏰ </value>
+    <value>زمان تمام شده </value>
   </data>
   <data name="HasBeenNotReserved" xml:space="preserve">
     <value>رزرو نشده</value>
@@ -136,10 +136,10 @@
     <value>هفته قبل</value>
   </data>
   <data name="Reserve" xml:space="preserve">
-    <value>رزرو کنید ➕</value>
+    <value>رزرو کنید </value>
   </data>
   <data name="Reserved" xml:space="preserve">
-    <value>رزرو شده ✅</value>
+    <value>رزرو شده</value>
   </data>
   <data name="ReserveFood" xml:space="preserve">
     <value>رزرو غذا</value>
@@ -155,5 +155,8 @@
   </data>
   <data name="FoodMenu" xml:space="preserve">
     <value>منوی غذای هفته</value>
+  </data>
+  <data name="ClickToCancel" xml:space="preserve">
+    <value>(برای لغو کلیک کنید)</value>
   </data>
 </root>

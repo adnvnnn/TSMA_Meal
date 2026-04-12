@@ -1,8 +1,9 @@
 ﻿@page "/login"
+
 @using TSMA_Meal.Features.Account
 @layout AccountLayout
-
 @inject IStringLocalizer<Login> Localizer
+@inject HttpClient Http
 
 <div class="login-box">
     <div class="text-center mb-4">
@@ -24,7 +25,7 @@
             <div class="input-group mb-4">
                 <input type="tel" class="form-control" placeholder="09123456789" @bind="_phoneNumber" maxlength="11">
             </div>
-            <button class="btn-main mb-3" @onclick="() => SendOtpAsync()">
+            <button class="btn-main mb-3" @onclick="SendOtpAsync">
                 @Localizer["SendCode"].Value
             </button>
             <hr />
@@ -41,9 +42,9 @@
                 @Localizer["Code"].Value
             </label>
             <div class="input-group mb-4">
-                <input type="text" class="form-control text-center fw-bold" id="otpInput" maxlength="6">
+                <input type="text" class="form-control text-center fw-bold" @bind="_code" maxlength="6">
             </div>
-            <button class="btn-main mb-3" @onclick="() => CheckOtpAsync()">
+            <button class="btn-main mb-3" @onclick="CheckOtpAsync">
                 @Localizer["Enter"].Value
             </button>
             <button class="btn-secondary" @onclick="() => _codeSent = false">
@@ -64,7 +65,7 @@
 @code
 {
     private string _phoneNumber = "09146271035";
-    private string _code;
+    private string _code = "123456";
     private bool _codeSent = false;
 
     private async Task SendOtpAsync()
@@ -85,9 +86,29 @@
 
     }
 
-    private async Task<bool> CheckOtpAsync()
+    private async Task CheckOtpAsync()
     {
+        var optResult = await Mediator.Send(new CheckOtpRequest(_phoneNumber, _code));
+        if (!optResult) return;
 
-        return true;
+        var personnel = await Mediator.Send(new PersonnelByPhoneQuery(_phoneNumber));
+
+
+        try
+        {
+
+            var response = await Http.PostAsJsonAsync("https://localhost:44374/account/login-otp", new { personnel.FullName, personnel.PersonnelCode });
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<dynamic>();
+                NavigationManager.NavigateTo(result.redirectUrl, forceLoad: true);
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
     }
+
 }

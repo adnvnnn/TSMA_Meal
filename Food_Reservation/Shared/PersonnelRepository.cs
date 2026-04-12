@@ -6,8 +6,9 @@ namespace TSMA_Meal.Shared;
 
 public interface IPersonnelRepository
 {
-    Task<bool> GetPersonnelByPhoneAsync(string phone, CancellationToken cancellationToken);
-    Task<Personnel?> GetPersonnelAsync(int personnelCode, CancellationToken cancellationToken);
+    Task<bool> ExistByPhoneAsync(string phone, CancellationToken cancellationToken);
+    Task<Personnel?> GetPersonnelIgnoreQueryAsync(int personnelCode, CancellationToken cancellationToken);
+    Task<Personnel?> GetPersonnelByPhoneAsync(string phone, CancellationToken cancellationToken);
     Task<bool> PersonnelHasAccess(int personnelCode);
     Task<bool> IsActive(int personnelCode, CancellationToken cancellationToken);
 
@@ -16,26 +17,26 @@ public interface IPersonnelRepository
 
 public class PersonnelRepository(AppDbContext context) : IPersonnelRepository
 {
-    public async Task<bool> GetPersonnelByPhoneAsync(string phone, CancellationToken cancellationToken)
+    public async Task<bool> ExistByPhoneAsync(string phone, CancellationToken cancellationToken)
     {
-        try
-        {
-            return await context.Personnel
-                .AsNoTracking()
-                .AnyAsync(p => context.PersonnelInfo.Count(pi => pi.Phone == phone && pi.Id == p.PersonnelCode) > 0,
-                    cancellationToken: cancellationToken);
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
+        return await context.Personnel
+            .AsNoTracking()
+            .AnyAsync(p => context.PersonnelInfo.Count(pi => pi.Phone == phone && pi.Id == p.PersonnelCode) > 0,
+                cancellationToken: cancellationToken);
     }
 
-    public async Task<Personnel?> GetPersonnelAsync(int personnelCode, CancellationToken cancellationToken)
+    public async Task<Personnel?> GetPersonnelIgnoreQueryAsync(int personnelCode, CancellationToken cancellationToken)
     {
         return await context.Personnel.IgnoreQueryFilters().AsNoTracking()
             .FirstOrDefaultAsync(p => p.PersonnelCode == personnelCode, cancellationToken);
+    }
+
+    public async Task<Personnel?> GetPersonnelByPhoneAsync(string phone, CancellationToken cancellationToken)
+    {
+        return await context.Personnel
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => context.PersonnelInfo.Count(pi => pi.Phone == phone && pi.Id == p.PersonnelCode) > 0,
+                cancellationToken: cancellationToken);
     }
 
     public async Task<bool> PersonnelHasAccess(int personnelCode)

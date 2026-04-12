@@ -54,10 +54,10 @@ internal class MealsListHandler(IMealsListRepository repository, IOffDaysReposit
         {
             Id = f.Id,
             OrderDay = f.OrderDay,
-            Name = isWeekEven ? f.Name.Split('/').First() : f.Name.Split('/').Skip(1).First(),
+            Name = isWeekEven ? f.Name.Split('/').Skip(1).First() : f.Name.Split('/').First(),
             Day = f.Day,
             Restaurant = f.Restaurant,
-            ImageUrl = isWeekEven ? f.ImageUrl : f.ImageUrl2,
+            ImageUrl = isWeekEven ? f.ImageUrl2 : f.ImageUrl,
             Price = f.Price,
 
             ReserveId = personnelReserves.FirstOrDefault(r => r.MealId == f.Id) != null ?
@@ -87,6 +87,7 @@ public class MealsViewModel
     public bool IsReserved { get; set; }
     public bool IsExpired { get; set; }
     public bool IsAvailable { get; set; }
+    public bool IsLoading { get; set; }
     public int ReserveId { get; set; }
 
 

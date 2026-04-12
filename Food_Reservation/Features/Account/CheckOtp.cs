@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using TSMA_Meal.Shared;
+using TSMA_Meal.Tools;
 
 namespace TSMA_Meal.Features.Account;
 public record CheckOtpRequest(string PhoneNumber, string Code):IRequest<bool>;
@@ -8,14 +9,20 @@ internal class CheckOtpHandler(IOtpRepository repository) : IRequestHandler<Chec
 {
     public async Task<bool> Handle(CheckOtpRequest request, CancellationToken cancellationToken)
     {
-        var code = await repository.GetAsync(request.PhoneNumber);
+        if (string.IsNullOrEmpty(request.Code)) return false;
 
-        if (code != request.Code)
+        var code = repository.Get(request.PhoneNumber);
+
+        if (code != Md5Hash.Hash(request.Code))
         {
             //TODO: Check failed count
+
+            return false;
         }
 
-        return code == request.Code;
+        repository.Delete(request.PhoneNumber);
+
+        return true ;
     }
 }
 

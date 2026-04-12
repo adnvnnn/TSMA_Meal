@@ -18,7 +18,7 @@ public class CancelReserveHandler(ICancelReserveAccess cancelReserveAccess,ICanc
 
         //IS PERSONNEL ACTIVE
 
-        var personnel = await personnelRepository.GetPersonnelAsync(request.PersonnelCode, cancellationToken);
+        var personnel = await personnelRepository.GetPersonnelIgnoreQueryAsync(request.PersonnelCode, cancellationToken);
 
         if (personnel == null) return /*TODO:Log FATAL*/;
 

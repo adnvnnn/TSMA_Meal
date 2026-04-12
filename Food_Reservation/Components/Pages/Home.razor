@@ -1,7 +1,7 @@
 ﻿@page "/"
 @inject IStringLocalizer<Home> Localizer
 @inject NavigationManager Navigation
-@attribute [Authorize]
+@* @attribute [Authorize] *@
 
 <div class="container">
     <div class="header-box text-center">
@@ -15,114 +15,149 @@
         </p>
     </div>
 
-    <div class="row g-4">
-        @foreach (var food in Meals)
-        {
 
-            var status = food.IsExpired || !food.IsAvailable ? "expired" : (food.IsReserved ? "reserved" : "available");
+    @if (!Meals.Any())
+    {
+        <div class="row g-4">
+            @foreach (var food in Meals)
+            {
+
+                var status = food.IsExpired || !food.IsAvailable ? "expired" : (food.IsReserved ? "reserved" : "available");
 
 
-            <div class="col-lg-4 col-md-6">
-                <div class="card food-card position-relative  @status  h-100">
-                    <div class="status-dot"></div>
+                <div class="col-lg-4 col-md-6">
+                    <div class="card food-card position-relative  @status  h-100">
+                        <div class="status-dot"></div>
 
-                    <img src="@food.ImageUrl" class="food-img" alt="@food.Name">
+                        <img src="@food.ImageUrl" class="food-img" alt="@food.Name">
 
-                    <div class="card-body p-4">
+                        <div class="card-body p-4">
 
-                        <div class="d-flex mb-3">
+                            <div class="d-flex mb-3">
 
-                            <h5 class="fw-bold mb-0 text-center">@food.Name</h5>
+                                <h5 class="fw-bold mb-0 text-center">@food.Name</h5>
 
-                            @if (food.IsExpired)
-                            {
-                                @if (food.IsReserved)
+                                @if (food.IsExpired)
                                 {
-                                    <small style="background-color: #28a745;"
-                                           class="rounded-3 text-white fw-bold p-1 me-2">
-                                        @Localizer["HasBeenReserved"].Value
-                                    </small>
-                                }
-                                else
-                                {
-                                    <small style="background-color: var(--primary-red);"
-                                           class="rounded-3 text-white fw-bold p-1 me-2">
-                                        @Localizer["HasBeenNotReserved"].Value
-                                    </small>
-                                }
-                            }
-                        </div>
-
-
-                        <div class="mb-3">
-                            <span class="badge bg-light text-dark small">@food.Restaurant</span>
-                        </div>
-
-                        <div class="text-muted small mb-3">@food.Day - @food.Date</div>
-
-                        <div class="mb-4">
-                            <span class="h5 text-muted text-decoration-line-through mx-2">
-                                @PriceFormat.FormatNumber(food.Price)
-                            </span>
-                            <span class="h5 text-danger fw-bold">
-                                @food.DiscountedPrice.ToString("N0") @Localizer["Rial"].Value
-                            </span>
-                        </div>
-
-                        <button class="btn-food" @onclick="() => ReserveAsync(food)">
-
-                            @if (food.IsExpired)
-                            {
-                                <text>@Localizer["Expired"].Value</text>
-
-                            }
-                            else
-                            {
-                                @if (!food.IsAvailable)
-                                {
-                                    <text>@Localizer["UnAvailable"].Value</text>
-
-                                }
-                                else
-                                {
-                                    if (food.IsReserved)
+                                    @if (food.IsReserved)
                                     {
-                                        <text>@Localizer["Reserved"].Value</text>
-
+                                        <small style="background-color: #28a745;"
+                                               class="rounded-3 text-white fw-bold p-1 me-2">
+                                            @Localizer["HasBeenReserved"].Value
+                                        </small>
                                     }
                                     else
                                     {
-                                        <text>@Localizer["Reserve"].Value</text>
-
+                                        <small style="background-color: var(--primary-red);"
+                                               class="rounded-3 text-white fw-bold p-1 me-2">
+                                            @Localizer["HasBeenNotReserved"].Value
+                                        </small>
                                     }
                                 }
-                            }
-                        </button>
+                            </div>
+
+
+                            <div class="mb-3">
+                                <span class="badge bg-light text-dark small">@food.Restaurant</span>
+                            </div>
+
+                            <div class="text-muted small mb-3">@food.Day - @food.Date</div>
+
+                            <div class="mb-4">
+                                <span class="h5 text-muted text-decoration-line-through mx-2">
+                                    @PriceFormat.FormatNumber(food.Price)
+                                </span>
+                                <span class="h5 text-danger fw-bold">
+                                    @food.DiscountedPrice.ToString("N0") @Localizer["Rial"].Value
+                                </span>
+                            </div>
+
+
+                            <div class="justify-content-center">
+
+                                @if (food.IsLoading)
+                                {
+                                    <button class="btn-food mb-2 " @onclick="() => ReserveAsync(food)" disabled="">
+
+                                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    </button>
+
+                                }
+                                else
+                                {
+                                    <button class="btn-food mb-2 " @onclick="() => ReserveAsync(food)">
+
+                                        @if (food.IsExpired)
+                                        {
+                                            <text>@Localizer["Expired"].Value</text>
+
+                                        }
+                                        else
+                                        {
+                                            @if (!food.IsAvailable)
+                                            {
+                                                <text>@Localizer["UnAvailable"].Value</text>
+
+                                            }
+                                            else
+                                            {
+                                                if (food.IsReserved)
+                                                {
+                                                    <text>
+                                                        @Localizer["Reserved"].Value
+
+                                                        <small class="fw-light text-opacity-25">@Localizer["ClickToCancel"]</small>
+                                                    </text>
+
+                                                }
+                                                else
+                                                {
+                                                    <text>@Localizer["Reserve"].Value</text>
+
+                                                }
+                                            }
+                                        }
+                                    </button>
+
+                                }
+
+
+
+                            </div>
+
+                        </div>
                     </div>
                 </div>
-            </div>
-        }
-    </div>
+            }
+
+        </div>
 
 
 
-    <div class="row justify-content-center">
+        <div class="row justify-content-center">
+            <nav>
+                <ul class="pagination custom-pagination p-0">
+                    <li class="page-item @(_pageId == -1 ? "active" : "")">
+                        <button class="page-link " @onclick="() => ChangePage(-1)">@Localizer["Prev"].Value</button>
+                    </li>
+                    <li class="page-item @(_pageId == 0 ? "active" : "")">
+                        <button class="page-link " @onclick="() => ChangePage(0)">@Localizer["Current"].Value</button>
+                    </li>
 
-        <nav>
-            <ul class="pagination custom-pagination p-0">
-                <li class="page-item @(_pageId == -1 ? "active" : "")">
-                    <button class="page-link " @onclick="() => ChangePage(-1)">@Localizer["Prev"].Value</button>
-                </li>
-                <li class="page-item @(_pageId == 0 ? "active" : "")">
-                    <button class="page-link " @onclick="() => ChangePage(0)">@Localizer["Current"].Value</button>
-                </li>
+                    <li class="page-item @(_pageId == 1 ? "active" : "")">
+                        <button class="page-link " @onclick="() => ChangePage(1)">@Localizer["Next"].Value</button>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    }
+    else
+    {
 
-                <li class="page-item @(_pageId == 1 ? "active" : "")">
-                    <button class="page-link " @onclick="() => ChangePage(1)">@Localizer["Next"].Value</button>
-                </li>
-            </ul>
-        </nav>
-    </div>
+            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+
+    }
+
 
 </div>
 
@@ -186,30 +221,31 @@
 
     private async Task ReserveAsync(MealsViewModel food)
     {
+        food.IsLoading = true;
+
         @if (food is { IsExpired: false, IsAvailable: true })
         {
             if (food.IsReserved)
             {
-                food.IsReserved = false;
 
                 try
                 {
                     await Mediator.Send(new CancelReserveRequest(food.ReserveId, _userId));
 
+                    food.IsReserved = false;
                 }
                 catch (Exception e)
                 {
                     food.IsReserved = true;
-
                 }
             }
             else
             {
-                food.IsReserved = true;
-
                 try
                 {
-                    await Mediator.Send(new ReserveFoodRequest(food.Id, _userId,_pageId));
+                    await Mediator.Send(new ReserveFoodRequest(food.Id, _userId, _pageId));
+
+                    food.IsReserved = true;
                 }
                 catch (Exception e)
                 {
@@ -217,8 +253,30 @@
 
                 }
             }
-
         }
+
+        food.IsLoading = false;
     }
+}
+
+
+<button @onclick="() => showErrorModal = true">e</button>
+<button @onclick="() => showSuccessModal = true">s</button>
+
+
+<SuccessModal Meal="SucceedMeal" Show="showSuccessModal"></SuccessModal>
+
+<ErrorModal Meal="ErrorMeal" Show="showErrorModal"></ErrorModal>
+
+@code {
+
+    private bool showSuccessModal = false;
+    private MealsViewModel SucceedMeal = new();
+
+    private bool showErrorModal = false;
+    private MealsViewModel ErrorMeal = new();
+
+
+
 
 }

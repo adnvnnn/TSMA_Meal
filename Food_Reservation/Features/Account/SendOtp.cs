@@ -4,27 +4,37 @@ using System.Xml.Linq;
 using TSMA_Meal.ConfigModels;
 using TSMA_Meal.Features.Reserves;
 using TSMA_Meal.Shared;
+using TSMA_Meal.Tools;
 
 namespace TSMA_Meal.Features.Account;
 public record SendOtpRequest (string PhoneNumber) : IRequest;
 
-internal class SendOtpHandler(IPersonnelRepository repository,ISmsService smsService,IOtpRepository otpRepository) : IRequestHandler<SendOtpRequest>
+internal class SendOtpHandler(IPersonnelRepository repository,ISmsService smsService
+    ,IOtpRepository otpRepository) : IRequestHandler<SendOtpRequest>
 {
     public async Task Handle(SendOtpRequest request, CancellationToken cancellationToken)
     {
         //IF PERSONNEL EXIST
-        var exist = await repository.GetPersonnelByPhoneAsync(request.PhoneNumber,cancellationToken);
+        var exist = await repository.ExistByPhoneAsync(request.PhoneNumber,cancellationToken);
 
         if (!exist) throw new PersonnelNotExistException();
 
 
         //TODO: Check login count
+        var attemptCount = otpRepository.GetAttemptCount(request.PhoneNumber);
+
+        if (attemptCount >= 5) throw new TooManyOtpSentException();
 
         var code = new Random().Next(100000, 999999).ToString("D6");
 
-        await smsService.SendOtpAsync(request.PhoneNumber, code);
+        code = "123456";
+        //await smsService.SendOtpAsync(request.PhoneNumber, code);
 
-        await otpRepository.AddAsync(request.PhoneNumber, code);
+        otpRepository.AddAttempt(request.PhoneNumber);
+
+        var hashedCode = Md5Hash.Hash(code);
+
+        otpRepository.Add(request.PhoneNumber, hashedCode,TimeSpan.FromMinutes(2));
     }
 }
 
@@ -85,7 +95,7 @@ internal class SmsService : ISmsService
 
 internal class SendOptFailedException() : Exception;
 internal class PersonnelNotExistException() : Exception;
-
+internal class TooManyOtpSentException() : Exception;
 
 public static class SendOtpRegister
 {

@@ -9,17 +9,30 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.RegisterLog(builder.Environment.EnvironmentName);
 
+
+
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 
 builder.Services.RegisterLocalization();
 
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
 
+
+builder.Services.AddControllersWithViews();
+
+builder.Services.AddHttpContextAccessor();
+
+
 builder.Services.RegisterAuthentication();
 
 builder.Services.RegisterAuthorization();
 
 builder.Services.RegisterDataBase();
+
+builder.Services.AddMemoryCache();
+
+// Program.cs
+builder.Services.AddHttpClient();
 
 builder.Configuration.RegisterConfigModels();
 
@@ -55,6 +68,9 @@ app.UseAuthorization();
 
 app.UseAntiforgery();
 
+app.MapControllers();
+
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
 app.Run();
+

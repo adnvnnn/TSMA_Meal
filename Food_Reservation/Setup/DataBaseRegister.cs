@@ -12,5 +12,6 @@ public static class DataBaseRegister
         {
             options.UseSqlServer(ConnectionStringConfigModel.Default);
         });
+
     }
 }

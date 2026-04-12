@@ -1,6 +1,9 @@
-﻿
+﻿@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
 <nav class="navbar navbar-expand-lg fixed-top py-2">
-    <div class="container">
+    <div class="container  d-flex align-items-center">
         <a class="navbar-brand fw-bold fs-5 d-flex align-items-center">
             <div class="d-flex align-items-end justify-content-start">
                 <div class="ms-2" style="width:80px;">
@@ -11,11 +14,10 @@
 
                 </div>
             </div>
-
-
         </a>
-        <span class="navbar-text fw-500" >عدنان عبداله زاده</span>
-        <a @onclick="() => Logout()" class="btn btn-outline-danger btn-sm">خروج</a>
+            <span class="navbar-text fw-500">@_userName</span>
+
+        <a @onclick="Logout" class="btn btn-outline-danger btn-sm">خروج</a>
     </div>
 </nav>
 
@@ -24,6 +26,22 @@
     private void Logout()
     {
         NavigationManager.NavigateTo("/login", forceLoad: true);
+    }
 
+    private string? _userName = "در حال بارگذاری...";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            _userName = user.FindFirst(ClaimTypes.Name)?.Value;
+        }
+        else
+        {
+            _userName = "کاربر ناشناس";
+        }
     }
 }
