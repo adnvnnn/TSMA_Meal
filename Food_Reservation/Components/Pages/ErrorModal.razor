@@ -8,10 +8,10 @@
                 </div>
                 <div class="modal-body text-center p-4">
 
-                    <p class="mb-0 mt-3">متأسفانه رزرو شما انجام نشد. لطفاً مجدداً تلاش کنید یا با پشتیبانی تماس بگیرید.</p>
+                    <p class="mb-0 mt-3">@Message</p>
                 </div>
                 <div class="modal-footer border-0 justify-content-center pb-4">
-                    <button type="button" class="btn-food available shadow-none w-auto px-5" @onclick="CloseModal">تلاش مجدد</button>
+                    <button type="button" @onclick="CloseModal" class="btn-food available shadow-none w-auto px-5" @onclick="CloseModal">تلاش مجدد</button>
                 </div>
             </div>
         </div>
@@ -19,12 +19,17 @@
 }
 
 @code {
+
+    [Parameter, EditorRequired] public string Message { get; set; }
+
     [Parameter, EditorRequired] public bool Show { get; set; } = false;
-
-    [Parameter, EditorRequired] public MealsViewModel Meal { get; set; }
-
-    private void CloseModal()
+    private async Task CloseModal()
     {
         Show = false;
+        await OnClose.InvokeAsync();
     }
+
+    [Parameter, EditorRequired]
+    public EventCallback OnClose { get; set; }
+
 }

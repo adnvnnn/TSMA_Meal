@@ -1,4 +1,4 @@
-﻿@if (Show)
+﻿@if (ShowSucceed)
 {
     <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
         <div class="modal-dialog modal-dialog-centered">
@@ -23,12 +23,16 @@
 }
 
 @code {
-    [Parameter, EditorRequired] public bool Show { get; set; } = false;
+    [Parameter, EditorRequired] public bool ShowSucceed { get; set; } = false;
 
     [Parameter,EditorRequired] public MealsViewModel Meal { get; set; }
 
-    private void CloseModal()
+
+    [Parameter, EditorRequired]  public EventCallback OnClose { get; set; }
+
+    private async Task CloseModal()
     {
-        Show = false;
+        ShowSucceed = false;
+        await OnClose.InvokeAsync();
     }
 }

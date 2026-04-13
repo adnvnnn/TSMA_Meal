@@ -159,4 +159,7 @@
   <data name="ClickToCancel" xml:space="preserve">
     <value>(برای لغو کلیک کنید)</value>
   </data>
+  <data name="Loading" xml:space="preserve">
+    <value>درحال بارگیری...</value>
+  </data>
 </root>

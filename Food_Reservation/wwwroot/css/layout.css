@@ -22,3 +22,12 @@ body {
     font-style: normal;
     font-display: swap;
 }
+
+.custom-pagination .page-link:focus {
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+.custom-pagination .page-link:active {
+    box-shadow: none !important;
+}

@@ -121,4 +121,7 @@
     <value>            رزرو غذا
 </value>
   </data>
+  <data name="Understand" xml:space="preserve">
+    <value>متوجه شدم</value>
+  </data>
 </root>

@@ -1,10 +1,12 @@
 ﻿@page "/"
+@using Microsoft.AspNetCore.WebUtilities
 @inject IStringLocalizer<Home> Localizer
 @inject NavigationManager Navigation
-@* @attribute [Authorize] *@
+@attribute [Authorize]
 
 <div class="container">
-    <div class="header-box text-center">
+
+    <div class="header-box text-center ">
         <h2 class="fw-bold text-dark mb-3">
             @Localizer["FoodMenu"].Value
 
@@ -16,7 +18,7 @@
     </div>
 
 
-    @if (!Meals.Any())
+    @if (Meals.Any())
     {
         <div class="row g-4">
             @foreach (var food in Meals)
@@ -78,7 +80,6 @@
                                 @if (food.IsLoading)
                                 {
                                     <button class="btn-food mb-2 " @onclick="() => ReserveAsync(food)" disabled="">
-
                                         <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                                     </button>
 
@@ -153,9 +154,10 @@
     }
     else
     {
-
-            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-
+        <div class="d-flex flex-column align-items-center justify-content-start min-vh-100">
+            <span class="spinner-border spinner-border-sm mb-3" style="width: 3rem; height: 3rem;"></span>
+            <p>@Localizer["Loading"].Value</p>
+        </div>
     }
 
 
@@ -166,6 +168,7 @@
 {
     private readonly int _userId = 436;
     private int _pageId;
+    private bool _isProcessing = false;
     private string _currentWeek = "";
 
     public List<MealsViewModel> Meals { get; set; } = new();
@@ -173,6 +176,8 @@
     private async Task ChangePage(int pageId)
     {
         _pageId = pageId;
+
+        Navigation.NavigateTo($"?week={pageId}", false);
 
         await LoadAsync(_pageId);
 
@@ -207,20 +212,41 @@
             Navigation.NavigateTo("/login", forceLoad: true);
 
         }
-        catch (Exception e)
-        {
 
-        }
     }
     protected override async Task OnInitializedAsync()
     {
+        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+        var query = QueryHelpers.ParseQuery(uri.Query);
+
+        if (query.TryGetValue("week", out var page))
+        {
+            int.TryParse(page, out _pageId);
+        }
+        else
+        {
+            _pageId = 0;
+        }
+
         await LoadAsync(_pageId);
 
-        await base.OnInitializedAsync();
+        _currentWeek = _pageId switch
+        {
+            0 => Localizer["Current"].Value,
+            1 => Localizer["Next"].Value,
+            -1 => Localizer["Prev"].Value,
+            _ => Localizer["Current"].Value
+        };
     }
+
+
 
     private async Task ReserveAsync(MealsViewModel food)
     {
+        if (_isProcessing) return;
+
+        _isProcessing = true;
+
         food.IsLoading = true;
 
         @if (food is { IsExpired: false, IsAvailable: true })
@@ -233,9 +259,15 @@
                     await Mediator.Send(new CancelReserveRequest(food.ReserveId, _userId));
 
                     food.IsReserved = false;
+
+                    _canceledMeal = food;
+
+                    _showCanceledModal = true;
                 }
                 catch (Exception e)
                 {
+                    _showErrorModal = true;
+
                     food.IsReserved = true;
                 }
             }
@@ -246,37 +278,64 @@
                     await Mediator.Send(new ReserveFoodRequest(food.Id, _userId, _pageId));
 
                     food.IsReserved = true;
+
+                    _reservedMeal = food;
+
+                    _showReservedModal = true;
                 }
                 catch (Exception e)
                 {
-                    food.IsReserved = false;
+                    _showErrorModal = true;
 
+                    food.IsReserved = false;
                 }
             }
         }
 
         food.IsLoading = false;
+        _isProcessing = false;
+
     }
 }
 
 
-<button @onclick="() => showErrorModal = true">e</button>
-<button @onclick="() => showSuccessModal = true">s</button>
 
+<ReservedModal OnClose="HandleReservedModelClose" Meal="_reservedMeal" ShowSucceed="_showReservedModal"></ReservedModal>
 
-<SuccessModal Meal="SucceedMeal" Show="showSuccessModal"></SuccessModal>
+<CanceledModal OnClose="HandleCanceledModelClose" Meal="_canceledMeal" ShowSucceed="_showCanceledModal"></CanceledModal>
 
-<ErrorModal Meal="ErrorMeal" Show="showErrorModal"></ErrorModal>
+<ErrorModal OnClose="HandleErrorModelClose" Message="@Localizer["ActionNotHappend"].Value" Show="_showErrorModal"></ErrorModal>
+
 
 @code {
 
-    private bool showSuccessModal = false;
-    private MealsViewModel SucceedMeal = new();
-
-    private bool showErrorModal = false;
-    private MealsViewModel ErrorMeal = new();
+    private bool _showReservedModal = false;
+    private MealsViewModel? _reservedMeal = new();
 
 
+    private void HandleReservedModelClose()
+    {
+        _showReservedModal = false;
+        _reservedMeal = null;
+
+    }
 
 
+    private bool _showCanceledModal = false;
+    private MealsViewModel? _canceledMeal = new();
+
+    private void HandleCanceledModelClose()
+    {
+        _showCanceledModal = false;
+        _canceledMeal = null;
+
+    }
+
+
+    private bool _showErrorModal = false;
+    private void HandleErrorModelClose()
+    {
+        _showErrorModal = false;
+
+    }
 }
