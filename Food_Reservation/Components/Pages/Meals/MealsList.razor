@@ -1,0 +1,149 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.WebUtilities
+@inject IStringLocalizer<MealsList> Localizer
+@inject NavigationManager Navigation
+@* @attribute [Authorize] *@
+@rendermode InteractiveServer
+
+<div class="container">
+
+    <MealMenu CurrentWeek="@_currentWeek"></MealMenu>
+
+    @if (Meals.Any())
+    {
+        <div class="row g-4">
+
+            @foreach (var meal in Meals)
+            {
+                <MealCard OnHandle="OnHandleReserve" PageId="_pageId" UserId="_userId" Meal="meal"></MealCard>
+            }
+
+        </div>
+
+        <MealsPagination OnPageChanged="OnPageChanged" PageId="_pageId"></MealsPagination>
+    }
+    else
+    {
+        <Loading></Loading>
+    }
+
+</div>
+
+
+@code
+{
+    private int _pageId;
+    private string _currentWeek = "";
+    private readonly int _userId = 436;
+
+    public List<MealsViewModel> Meals { get; set; } = new();
+
+
+    private async Task OnPageChanged(int page)
+    {
+        _pageId = page;
+
+        Navigation.NavigateTo($"?week={_pageId}", false);
+
+        await LoadAsync(_pageId);
+
+    }
+
+    private async Task LoadAsync(int pageId = 0)
+    {
+        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+
+        // var query = QueryHelpers.ParseQuery(uri.Query);
+
+        // if (query.TryGetValue("week", out var page))
+        // {
+        //     int.TryParse(page, out _pageId);
+        // }
+        // else
+        // {
+        //     _pageId = 0;
+        // }
+
+        try
+        {
+            Meals = await Mediator.Send(new MealsListRequest(_userId, pageId));
+            _currentWeek = Localizer["Current"].Value;
+
+            _currentWeek = pageId switch
+            {
+                0 => Localizer["Current"].Value,
+                1 => Localizer["Next"].Value,
+                -1 => Localizer["Prev"].Value,
+                _ => _currentWeek
+            };
+        }
+        catch (NotPermittedException e)
+        {
+            //TODO:Log Out
+
+            Navigation.NavigateTo("/login", forceLoad: true);
+
+        }
+
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync(_pageId);
+    }
+
+
+    private async Task OnHandleReserve(MealsViewModel b)
+    {
+        if (b.IsReserved)
+        {
+            _reservedMeal = b;
+
+            _showReservedModal = true;
+        }
+        else
+        {
+            _canceledMeal = b;
+
+            _showCanceledModal = true;
+        }
+    }
+
+
+    private bool _showReservedModal = false;
+    private MealsViewModel? _reservedMeal = new();
+
+
+    private void HandleReservedModelClose()
+    {
+        _showReservedModal = false;
+        _reservedMeal = null;
+    }
+
+
+    private bool _showCanceledModal = false;
+    private MealsViewModel? _canceledMeal = new();
+
+    private void HandleCanceledModelClose()
+    {
+        _showCanceledModal = false;
+        _canceledMeal = null;
+
+    }
+
+
+    private bool _showErrorModal = false;
+    private void HandleErrorModelClose()
+    {
+        _showErrorModal = false;
+
+    }
+}
+
+<ReservedModal OnClose="HandleReservedModelClose" Meal="_reservedMeal" ShowSucceed="_showReservedModal"></ReservedModal>
+
+<CanceledModal OnClose="HandleCanceledModelClose" Meal="_canceledMeal" ShowSucceed="_showCanceledModal"></CanceledModal>
+
+<ErrorModal OnClose="HandleErrorModelClose" Message="@Localizer["ActionNotHappen"].Value" Show="_showErrorModal"></ErrorModal>
+
+

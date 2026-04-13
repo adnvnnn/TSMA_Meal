@@ -1,0 +1,75 @@
+﻿@inject IStringLocalizer<SendOtp> Localizer
+
+@using TSMA_Meal.Features.Account
+
+<div class="phone-section active">
+    <label class="form-label mb-3 d-block text-dark">
+        @Localizer["PhoneNumber"].Value
+    </label>
+
+    <div class="input-group mb-4">
+        <input type="tel" class="form-control" placeholder="09123456789" @bind="PhoneNumber" maxlength="11">
+    </div>
+
+    @if (_sendCodeError != null)
+    {
+        <div class="alert alert-danger mb-4 p-2" role="alert">
+            @_sendCodeError
+        </div>
+
+    }
+
+
+
+    @if (_isSendProcessing)
+    {
+        <button class="btn-main mb-3" disabled="">
+            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+        </button>
+    }
+    else
+    {
+        <button class="btn-main mb-3" @onclick="SendOtpAsync">
+            @Localizer["SendCode"].Value
+        </button>
+    }
+
+    <hr />
+
+    <small class="text-muted d-block text-center">
+        @Localizer["Example"].Value
+    </small>
+</div>
+
+
+@code{
+    private bool _isSendProcessing = false;
+    private string? _sendCodeError = null;
+    [Parameter, EditorRequired] public string PhoneNumber { get; set; }
+    private bool _codeSent = false;
+
+    private async Task SendOtpAsync()
+    {
+        _isSendProcessing = true;
+
+        try
+        {
+            await Mediator.Send(new SendOtpRequest(PhoneNumber));
+
+            _codeSent = true;
+
+            _sendCodeError = null;
+
+        }
+        catch (Exception e)
+        {
+            _sendCodeError = e.Message;
+
+            _codeSent = false;
+        }
+
+
+        _isSendProcessing = false;
+
+    }
+}

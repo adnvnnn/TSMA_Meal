@@ -9,18 +9,20 @@ using TSMA_Meal.Tools;
 namespace TSMA_Meal.Features.Account;
 public record SendOtpRequest (string PhoneNumber) : IRequest;
 
-internal class SendOtpHandler(IPersonnelRepository repository,ISmsService smsService
+internal class SendOtpHandler(IPersonnelRepository repository,ISmsService smsService,IPersonnelRepository personnelRepository
     ,IOtpRepository otpRepository) : IRequestHandler<SendOtpRequest>
 {
     public async Task Handle(SendOtpRequest request, CancellationToken cancellationToken)
     {
+        if (!request.PhoneNumber.StartsWith("09")) throw new InvalidNumberException();
+
         //IF PERSONNEL EXIST
-        var exist = await repository.ExistByPhoneAsync(request.PhoneNumber,cancellationToken);
+        var exist = await repository.ExistByPhoneAsync(request.PhoneNumber, cancellationToken);
 
         if (!exist) throw new PersonnelNotExistException();
 
+        if (!await personnelRepository.PersonnelHasAccessByPhone(request.PhoneNumber, cancellationToken)) throw new NotPermittedException();
 
-        //TODO: Check login count
         var attemptCount = otpRepository.GetAttemptCount(request.PhoneNumber);
 
         if (attemptCount >= 5) throw new TooManyOtpSentException();
@@ -34,7 +36,7 @@ internal class SendOtpHandler(IPersonnelRepository repository,ISmsService smsSer
 
         var hashedCode = Md5Hash.Hash(code);
 
-        otpRepository.Add(request.PhoneNumber, hashedCode,TimeSpan.FromMinutes(2));
+        otpRepository.Add(request.PhoneNumber, hashedCode, TimeSpan.FromMinutes(2));
     }
 }
 
@@ -93,9 +95,10 @@ internal class SmsService : ISmsService
 }
 
 
-internal class SendOptFailedException() : Exception;
-internal class PersonnelNotExistException() : Exception;
-internal class TooManyOtpSentException() : Exception;
+internal class InvalidNumberException() : Exception("شماره نامعتبر است");
+internal class SendOptFailedException() : Exception("خطا در ارسال پیامک");
+internal class PersonnelNotExistException() : Exception("فقط پرسنل میتونن استفاده کنن");
+internal class TooManyOtpSentException() : Exception("تلاش بیش از حد. 24 ساعت دیگر امتحان کنید");
 
 public static class SendOtpRegister
 {

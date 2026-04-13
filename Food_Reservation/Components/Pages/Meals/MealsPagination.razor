@@ -1,0 +1,38 @@
+﻿@inject NavigationManager Navigation
+@inject IStringLocalizer<MealsPagination> Localizer
+
+
+<div class="row justify-content-center">
+    <nav>
+        <ul class="pagination custom-pagination p-0">
+            <li class="page-item @(PageId == -1 ? "active" : "")">
+                <button class="page-link " @onclick="() => ChangePage(-1)">@Localizer["Prev"].Value</button>
+            </li>
+            <li class="page-item @(PageId == 0 ? "active" : "")">
+                <button class="page-link " @onclick="() => ChangePage(0)">@Localizer["Current"].Value</button>
+            </li>
+
+            <li class="page-item @(PageId == 1 ? "active" : "")">
+                <button class="page-link " @onclick="() => ChangePage(1)">@Localizer["Next"].Value</button>
+            </li>
+        </ul>
+    </nav>
+</div>
+
+
+@code{
+
+    [Parameter,EditorRequired] public int PageId { get; set; }
+
+    private async Task ChangePage(int pageId)
+    {
+        PageId = pageId;
+
+
+        await OnPageChanged.InvokeAsync(PageId);
+    }
+
+
+    [Parameter, EditorRequired] public EventCallback<int> OnPageChanged { get; set; }
+
+}

@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using TSMA_Meal.Database;
 using TSMA_Meal.Entities;
+using TSMA_Meal.Features.Account;
 using TSMA_Meal.Shared;
 using TSMA_Meal.Tools;
 
@@ -25,7 +26,7 @@ internal class MealsListHandler(IMealsListRepository repository, IOffDaysReposit
 
         var isActive = await personnelRepository.IsActive(request.PersonnelCode, cancellationToken);
 
-        if (!isActive) throw new PersonnelFiredException();
+        if (!isActive) throw new PersonnelNotExistException();
 
 
         //CHECK PERSONNEL ACCESS    

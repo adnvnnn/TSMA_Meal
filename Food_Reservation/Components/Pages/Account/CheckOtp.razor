@@ -1,0 +1,73 @@
+﻿@inject IStringLocalizer<CheckOtp> Localizer
+
+<div class="otp-section active">
+    <label class="form-label mb-3 d-block text-dark">
+        @Localizer["Code"].Value
+    </label>
+    <div class="input-group mb-4">
+        <input type="text" class="form-control text-center fw-bold" @bind="Code" maxlength="6">
+    </div>
+
+    @if (_checkCodeError != null)
+    {
+        <div class="alert alert-danger mb-4 p-2" role="alert">
+            @_checkCodeError
+        </div>
+
+    }
+
+    @if (_isCheckProcessing)
+    {
+        <button class="btn-main mb-3" disabled="">
+            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+        </button>
+
+        <button class="btn-secondary" disabled="">
+            @Localizer["ChangeNumber"].Value
+        </button>
+    }
+    else
+    {
+        <button class="btn-main mb-3" @onclick="CheckOtpAsync">
+            @Localizer["Enter"].Value
+        </button>
+        <button class="btn-secondary" @onclick="() => _codeSent = false">
+            @Localizer["ChangeNumber"].Value
+        </button>
+    }
+
+    <hr />
+
+    <small class="text-muted d-block text-center">
+        @PhoneNumber
+    </small>
+</div>
+
+@code
+{
+
+    [Parameter, EditorRequired] public string PhoneNumber { get; set; } 
+
+    [Parameter, EditorRequired] public string Code { get; set; }
+
+    private bool _codeSent = false;
+
+
+
+    private bool _isCheckProcessing = false;
+    private string? _checkCodeError = null;
+
+
+
+    private async Task CheckOtpAsync()
+    {
+        _isCheckProcessing = true;
+
+
+
+        _isCheckProcessing = false;
+
+    }
+
+
+}

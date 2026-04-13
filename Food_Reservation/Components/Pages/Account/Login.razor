@@ -2,148 +2,29 @@
 
 @using TSMA_Meal.Features.Account
 @layout AccountLayout
-@inject IStringLocalizer<Login> Localizer
-@inject HttpClient Http
+
 
 <div class="login-box">
-    <div class="text-center mb-4">
-        <div class="logo">
-            <img alt="" src="images/tsma-origin.webp" class="w-100" />
-        </div>
-        <h4 class="mb-2 fw-bold text-dark">@Localizer["PersonnelPortal"].Value</h4>
-        <p class="text-muted mb-0">
-            @Localizer["TsmaCompany"].Value
-        </p>
-    </div>
+
+    <Logo></Logo>
 
     @if (!_codeSent)
     {
-
-
-
-        <div class="phone-section active">
-            <label class="form-label mb-3 d-block text-dark">
-                @Localizer["PhoneNumber"].Value
-            </label>
-            <div class="input-group mb-4">
-                <input type="tel" class="form-control" placeholder="09123456789" @bind="_phoneNumber" maxlength="11">
-            </div>
-
-            @if (_isProcessing)
-            {
-                <button class="btn-main mb-3" disabled="">
-                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                </button>
-            }
-            else
-            {
-                <button class="btn-main mb-3" @onclick="SendOtpAsync">
-                    @Localizer["SendCode"].Value
-                </button>
-            }
-
-            <hr />
-
-            <small class="text-muted d-block text-center">
-                @Localizer["Example"].Value
-            </small>
-        </div>
+        <SendOtp PhoneNumber="_phoneNumber"></SendOtp>
     }
     else
     {
-        <div class="otp-section active">
-            <label class="form-label mb-3 d-block text-dark">
-                @Localizer["Code"].Value
-            </label>
-            <div class="input-group mb-4">
-                <input type="text" class="form-control text-center fw-bold" @bind="_code" maxlength="6">
-            </div>
-            
-            @if (_isProcessing)
-            {
-                <button class="btn-main mb-3" disabled="">
-                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                </button>
-
-                <button class="btn-secondary" disabled="">
-                    @Localizer["ChangeNumber"].Value
-                </button>
-            }
-            else
-            {
-                <button class="btn-main mb-3" @onclick="CheckOtpAsync">
-                    @Localizer["Enter"].Value
-                </button>
-                <button class="btn-secondary" @onclick="() => _codeSent = false">
-                    @Localizer["ChangeNumber"].Value
-                </button>
-            }
-
-
-
-            <hr />
-            <small class="text-muted d-block text-center">
-                @_phoneNumber
-            </small>
-        </div>
+        <CheckOtp Code="_code" PhoneNumber="_phoneNumber"></CheckOtp>
     }
-
-
 
 </div>
 
 @code
 {
+
     private string _phoneNumber = "09146271035";
     private string _code = "123456";
     private bool _codeSent = false;
-    private bool _isProcessing = false;
 
-    private async Task SendOtpAsync()
-    {
-        _isProcessing = true;
-
-        try
-        {
-            await Mediator.Send(new SendOtpRequest(_phoneNumber));
-
-            _codeSent = true;
-
-        }
-        catch (PersonnelNotExistException e)
-        {
-            //TODO: Only Personnel can
-
-            _codeSent = false;
-        }
-
-        _isProcessing = false;
-
-    }
-
-    private async Task CheckOtpAsync()
-    {
-        var optResult = await Mediator.Send(new CheckOtpRequest(_phoneNumber, _code));
-        if (!optResult) return;
-
-        var personnel = await Mediator.Send(new PersonnelByPhoneQuery(_phoneNumber));
-
-
-        try
-        {
-
-            var response = await Http.PostAsJsonAsync("https://localhost:44374/account/login-otp", new { personnel.FullName, personnel.PersonnelCode });
-            if (response.IsSuccessStatusCode)
-            {
-                var result = await response.Content.ReadFromJsonAsync<dynamic>();
-                NavigationManager.NavigateTo(result.redirectUrl, forceLoad: true);
-            }
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
-    }
 
 }

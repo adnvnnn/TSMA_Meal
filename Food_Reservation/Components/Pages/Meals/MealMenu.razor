@@ -1,0 +1,16 @@
+﻿@inject IStringLocalizer<MealMenu> Localizer
+<div class="header-box text-center ">
+    <h2 class="fw-bold text-dark mb-3">
+        @Localizer["FoodMenu"].Value
+
+        <span class="badge bg-danger ms-2">@CurrentWeek</span>
+    </h2>
+    <p class="text-muted mb-3">
+        @Localizer["SelectFood"].Value
+    </p>
+</div>
+
+@code
+{
+    [Parameter,EditorRequired] public string CurrentWeek { get; set; }
+}

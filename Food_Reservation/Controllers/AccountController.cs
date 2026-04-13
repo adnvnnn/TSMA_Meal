@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿using MediatR;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using TSMA_Meal.Features.Account;
 
 namespace TSMA_Meal.Controllers;
 
@@ -15,6 +17,12 @@ public class AccountController() : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> LoginOtp([FromBody] LoginOtpRequest request)
     {
+
+        //var optResult = await Mediator.Send(new CheckOtpRequest(PhoneNumber, _code));
+
+        //if (!optResult) return;
+
+        //var personnel = await Mediator.Send(new PersonnelByPhoneQuery(PhoneNumber));
 
         var claims = new List<Claim>
         {

@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using TSMA_Meal.Database;
 using TSMA_Meal.Entities;
+using TSMA_Meal.Features.Account;
 using TSMA_Meal.Shared;
 using TSMA_Meal.Tools;
 
@@ -18,11 +19,9 @@ public class CancelReserveHandler(ICancelReserveAccess cancelReserveAccess,ICanc
 
         //IS PERSONNEL ACTIVE
 
-        var personnel = await personnelRepository.GetPersonnelIgnoreQueryAsync(request.PersonnelCode, cancellationToken);
+        var personnel = await personnelRepository.GetPersonnelAsync(request.PersonnelCode, cancellationToken);
 
-        if (personnel == null) return /*TODO:Log FATAL*/;
-
-        if (!personnel.Active) throw new PersonnelFiredException();
+        if (personnel == null) throw new PersonnelNotExistException() /*TODO:Log FATAL*/;
 
 
 
