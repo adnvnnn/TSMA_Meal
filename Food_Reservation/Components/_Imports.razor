@@ -8,12 +8,14 @@
 @using Microsoft.JSInterop
 @using TSMA_Meal.Components
 @using Microsoft.Extensions.Localization
-@inject IStringLocalizer<SharedResource> SharedLocalizer
 @using Microsoft.AspNetCore.Authorization
 @using MediatR
 @using TSMA_Meal.Features.Reserves
 @using TSMA_Meal.Shared
 @using TSMA_Meal.Tools
-@inject IMediator Mediator
 @using TSMA_Meal.Components.Layout
 @inject NavigationManager NavigationManager
+@inject IMediator Mediator
+@inject IStringLocalizer<SharedResource> SharedLocalizer
+
+

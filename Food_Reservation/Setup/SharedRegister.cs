@@ -11,5 +11,8 @@ public static class SharedRegister
         services.AddScoped<IOffDaysRepository, OffDaysRepository>();
 
         services.AddScoped<IOtpRepository, OtpRepository>();
+
+        services.AddScoped<IOtpService, OtpService>();
+
     }
 }

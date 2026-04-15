@@ -1,5 +1,4 @@
-﻿@inject IStringLocalizer<MealCard>  Localizer
-@rendermode InteractiveServer
+﻿@inject IStringLocalizer<MealCard> Localizer
 
 <div class="col-lg-4 col-md-6">
     <div class="card food-card position-relative @_status h-100">
@@ -32,7 +31,6 @@
                 }
             </div>
 
-
             <div class="mb-3">
                 <span class="badge bg-light text-dark small">@Meal.Restaurant</span>
             </div>
@@ -56,7 +54,6 @@
                     <button class="btn-food mb-2 " @onclick="() => ReserveAsync(Meal)" disabled="">
                         <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                     </button>
-
                 }
                 else
                 {
@@ -88,18 +85,14 @@
                                 else
                                 {
                                     <text>@Localizer["Reserve"].Value</text>
-
                                 }
                             }
                         }
-                    </button>
 
+                    </button>
                 }
 
-
-
             </div>
-
         </div>
     </div>
 </div>
@@ -109,54 +102,44 @@
     [Parameter, EditorRequired] public MealsViewModel Meal { get; set; } = new();
     [Parameter, EditorRequired] public int UserId { get; set; }
     [Parameter, EditorRequired] public int PageId { get; set; }
+    [Parameter] public bool IsProcessingAny { get; set; }
 
-    private string? _status = null;
-
-    private bool _isProcessing = false;
-
-    protected override Task OnInitializedAsync()
-    {
-        _status = Meal.IsExpired || !Meal.IsAvailable ? "expired" : (Meal.IsReserved ? "reserved" : "available");
-
-        return base.OnInitializedAsync();
-    }
+    private string? _status => Meal.IsExpired || !Meal.IsAvailable
+        ? "expired"
+        : (Meal.IsReserved ? "reserved" : "available");
 
 
-    [Parameter, EditorRequired] public EventCallback<MealsViewModel> OnHandle { get; set; }
+    [Parameter, EditorRequired] public EventCallback OnProcessStart { get; set; }
+    [Parameter, EditorRequired] public EventCallback<string> OnError { get; set; }
+    [Parameter, EditorRequired] public EventCallback<MealsViewModel> OnHandleReserve { get; set; }
+    [Parameter, EditorRequired] public EventCallback<MealsViewModel> OnHandleCancelReserve { get; set; }
 
     private async Task ReserveAsync(MealsViewModel food)
     {
-        if (_isProcessing) return;
-
-        _isProcessing = true;
+        if (IsProcessingAny) return;
 
         food.IsLoading = true;
+
+        await OnProcessStart.InvokeAsync();
 
         @if (food is { IsExpired: false, IsAvailable: true })
         {
             if (food.IsReserved)
             {
-
                 try
                 {
                     await Mediator.Send(new CancelReserveRequest(food.ReserveId, UserId));
 
                     food.IsReserved = false;
 
-                    //_canceledMeal = food;
-
-                    //_showCanceledModal = true;
-
-                    await OnHandle.InvokeAsync(food);
+                    await OnHandleCancelReserve.InvokeAsync(food);
 
                 }
                 catch (Exception e)
                 {
-                    //_showErrorModal = true;
-
                     food.IsReserved = true;
-
-                    await OnHandle.InvokeAsync(food);
+                    
+                    await OnError.InvokeAsync(e.Message);
                 }
             }
             else
@@ -167,25 +150,21 @@
 
                     food.IsReserved = true;
 
-                    //_reservedMeal = food;
+                    await OnHandleReserve.InvokeAsync(food);
 
-                    //_showReservedModal = true;
-
-                    await OnHandle.InvokeAsync(food);
                 }
                 catch (Exception e)
                 {
-                    //_showErrorModal = true;
-
                     food.IsReserved = false;
 
-                    await OnHandle.InvokeAsync(food);
+                    await OnError.InvokeAsync(e.Message);
                 }
             }
         }
 
         food.IsLoading = false;
 
-        _isProcessing = false;
+        await InvokeAsync(StateHasChanged);
+
     }
 }

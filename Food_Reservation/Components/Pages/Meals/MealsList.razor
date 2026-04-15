@@ -1,9 +1,9 @@
 ﻿@page "/"
-@using Microsoft.AspNetCore.WebUtilities
+@using TSMA_Meal.Components.Pages.Meals.Modals
 @inject IStringLocalizer<MealsList> Localizer
 @inject NavigationManager Navigation
-@* @attribute [Authorize] *@
 @rendermode InteractiveServer
+@attribute [Authorize]
 
 <div class="container">
 
@@ -15,7 +15,14 @@
 
             @foreach (var meal in Meals)
             {
-                <MealCard OnHandle="OnHandleReserve" PageId="_pageId" UserId="_userId" Meal="meal"></MealCard>
+                <MealCard OnProcessStart="OnProcessStart"
+                          IsProcessingAny="_isProcessingAnyMeal"
+                          OnHandleReserve="OnHandleReserve"
+                          OnHandleCancelReserve="OnHandleCancelReserve"
+                          OnError="OnHandleError"
+                          PageId="_pageId" UserId="_userId" Meal="meal">
+
+                </MealCard>
             }
 
         </div>
@@ -38,37 +45,19 @@
 
     public List<MealsViewModel> Meals { get; set; } = new();
 
-
-    private async Task OnPageChanged(int page)
+    protected override async Task OnInitializedAsync()
     {
-        _pageId = page;
-
-        Navigation.NavigateTo($"?week={_pageId}", false);
+        var uri = new Uri(Navigation.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+        _pageId = int.TryParse(query["week"], out var pageId) ? pageId : 0;
 
         await LoadAsync(_pageId);
-
     }
 
     private async Task LoadAsync(int pageId = 0)
     {
-        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
-
-        // var query = QueryHelpers.ParseQuery(uri.Query);
-
-        // if (query.TryGetValue("week", out var page))
-        // {
-        //     int.TryParse(page, out _pageId);
-        // }
-        // else
-        // {
-        //     _pageId = 0;
-        // }
-
         try
         {
-            Meals = await Mediator.Send(new MealsListRequest(_userId, pageId));
-            _currentWeek = Localizer["Current"].Value;
-
             _currentWeek = pageId switch
             {
                 0 => Localizer["Current"].Value,
@@ -76,41 +65,75 @@
                 -1 => Localizer["Prev"].Value,
                 _ => _currentWeek
             };
+
+            Meals = await Mediator.Send(new MealsListRequest(_userId, pageId));
         }
         catch (NotPermittedException e)
         {
             //TODO:Log Out
 
             Navigation.NavigateTo("/login", forceLoad: true);
-
         }
 
+        await InvokeAsync(StateHasChanged);
     }
 
-    protected override async Task OnInitializedAsync()
+    private async Task OnPageChanged(int page)
     {
+        _pageId = page;
+    
+        var uri = new UriBuilder(Navigation.Uri)
+        {
+            Query = $"week={page}"
+        };
+    
+        Navigation.NavigateTo(uri.ToString(), forceLoad: false);
+    
         await LoadAsync(_pageId);
+
     }
 
+    private bool _isProcessingAnyMeal;
 
-    private async Task OnHandleReserve(MealsViewModel b)
+
+    private async Task OnProcessStart()
     {
-        if (b.IsReserved)
-        {
-            _reservedMeal = b;
-
-            _showReservedModal = true;
-        }
-        else
-        {
-            _canceledMeal = b;
-
-            _showCanceledModal = true;
-        }
+        _isProcessingAnyMeal = true;
+        await InvokeAsync(StateHasChanged);
     }
 
+    private void OnHandleReserve(MealsViewModel b)
+    {
 
-    private bool _showReservedModal = false;
+        _reservedMeal = b;
+
+        _showReservedModal = true;
+
+        _isProcessingAnyMeal = false;
+
+    }
+    private void OnHandleCancelReserve(MealsViewModel b)
+    {
+
+        _canceledMeal = b;
+
+        _showCanceledModal = true;
+
+        _isProcessingAnyMeal = false;
+
+    }
+    private void OnHandleError(string message)
+    {
+
+        _showErrorModal = true;
+
+        _errorMessage = message;
+
+        _isProcessingAnyMeal = false;
+
+    }
+
+    private bool _showReservedModal;
     private MealsViewModel? _reservedMeal = new();
 
 
@@ -121,7 +144,7 @@
     }
 
 
-    private bool _showCanceledModal = false;
+    private bool _showCanceledModal;
     private MealsViewModel? _canceledMeal = new();
 
     private void HandleCanceledModelClose()
@@ -132,7 +155,9 @@
     }
 
 
-    private bool _showErrorModal = false;
+    private bool _showErrorModal;
+    private string? _errorMessage = "";
+
     private void HandleErrorModelClose()
     {
         _showErrorModal = false;
@@ -144,6 +169,4 @@
 
 <CanceledModal OnClose="HandleCanceledModelClose" Meal="_canceledMeal" ShowSucceed="_showCanceledModal"></CanceledModal>
 
-<ErrorModal OnClose="HandleErrorModelClose" Message="@Localizer["ActionNotHappen"].Value" Show="_showErrorModal"></ErrorModal>
-
-
+<ErrorModal OnClose="HandleErrorModelClose" Message="@_errorMessage" Show="_showErrorModal"></ErrorModal>

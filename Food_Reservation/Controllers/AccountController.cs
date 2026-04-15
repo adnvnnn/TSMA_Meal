@@ -2,66 +2,93 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using TSMA_Meal.ConfigModels;
 using TSMA_Meal.Features.Account;
 
 namespace TSMA_Meal.Controllers;
 
-[Route("account")]
-public class AccountController() : Controller
+public class AccountController(IMediator mediator) : Controller
 {
 
-
-    [HttpPost("login-otp")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> LoginOtp([FromBody] LoginOtpRequest request)
+    [HttpPost("check-otp")]
+    [IgnoreAntiforgeryToken]
+    public async Task<IActionResult> LoginOtp([FromForm] LoginOtpRequest request)
     {
+        var otpResult = await mediator.Send(new CheckOtpRequest(request.PhoneNumber, request.Code));
+        if (!otpResult) return LocalRedirect("/login?error=invalid");
 
-        //var optResult = await Mediator.Send(new CheckOtpRequest(PhoneNumber, _code));
-
-        //if (!optResult) return;
-
-        //var personnel = await Mediator.Send(new PersonnelByPhoneQuery(PhoneNumber));
+        var personnel = await mediator.Send(new PersonnelByPhoneQuery(request.PhoneNumber));
 
         var claims = new List<Claim>
         {
-            new(ClaimTypes.Name, request.Name),
-            new(ClaimTypes.NameIdentifier, request.PersonnelCode)
+            new(ClaimTypes.Name, personnel.FullName),
+            new(ClaimTypes.NameIdentifier, personnel.PersonnelCode.ToString())
         };
 
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-
         var principal = new ClaimsPrincipal(identity);
 
-
-            
         var authProperties = new AuthenticationProperties
         {
             IsPersistent = true,
-            ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7),
+            ExpiresUtc = DateTimeOffset.UtcNow.AddDays(SecuritySettingsConfigModel.LoginDays),
             AllowRefresh = true
         };
 
         await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, authProperties);
 
-
         return LocalRedirect("/");
     }
+    //[HttpPost("check-otp")]
+    //[IgnoreAntiforgeryToken]
+    //public async Task<IActionResult> LoginOtp([FromBody] LoginOtpRequest request)
+    //{
+
+    //    var optResult = await mediator.Send(new CheckOtpRequest(request.PhoneNumber, request.Code));
+
+    //    if (!optResult) return Unauthorized();
+
+    //    var personnel = await mediator.Send(new PersonnelByPhoneQuery(request.PhoneNumber));
+
+    //    var claims = new List<Claim>
+    //    {
+    //        new(ClaimTypes.Name, personnel.FullName),
+    //        new(ClaimTypes.NameIdentifier, personnel.PersonnelCode.ToString())
+    //    };
+
+    //    var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+    //    var principal = new ClaimsPrincipal(identity);
+
+
+
+    //    var authProperties = new AuthenticationProperties
+    //    {
+    //        IsPersistent = true,
+    //        ExpiresUtc = DateTimeOffset.UtcNow.AddDays(SecuritySettingsConfigModel.LoginDays),
+    //        AllowRefresh = true
+    //    };
+
+    //    await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, authProperties);
+
+
+    //    return Ok();
+    //}
+
 
     [HttpPost("logout")]
-    [ValidateAntiForgeryToken]
+    [IgnoreAntiforgeryToken]
     public async Task<IActionResult> Logout()
     {
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        return LocalRedirect("/");
+        return LocalRedirect("/login");
     }
-
 
 
     public class LoginOtpRequest
     {
-        public string Name { get; set; }
-        public string PersonnelCode { get; set; }
+        public string Code { get; set; }
+        public string PhoneNumber { get; set; }
     }
 }

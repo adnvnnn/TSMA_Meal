@@ -27,11 +27,16 @@ builder.Services.RegisterAuthentication();
 
 builder.Services.RegisterAuthorization();
 
+
 builder.Services.RegisterDataBase();
 
 builder.Services.AddMemoryCache();
 
-// Program.cs
+builder.Services.AddHttpClient("default", client =>
+ {
+     //client.BaseAddress = new Uri(builder.Environment.BaseAddress);
+ });
+
 builder.Services.AddHttpClient();
 
 builder.Configuration.RegisterConfigModels();

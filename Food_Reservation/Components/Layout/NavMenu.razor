@@ -1,47 +1,65 @@
 ﻿@using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JS
+@rendermode InteractiveServer
 
-<nav class="navbar navbar-expand-lg fixed-top py-2">
-    <div class="container  d-flex align-items-center">
-        <a class="navbar-brand fw-bold fs-5 d-flex align-items-center">
-            <div class="d-flex align-items-end justify-content-end">
-                <div class="ms-2" style="width:80px;">
-                    <img class="w-100" alt="" src="images/tsma-origin.webp"/>
-                </div>
-                <div class="mb-2">
-                    @SharedLocalizer["ReserveFood"].Value
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top py-2">
+    <div class="container">
 
-                </div>
-            </div>
+        <a class="navbar-brand d-flex align-items-center" href="/">
+@*             <img src="images/tsma-origin.webp" alt="" width="60" class="me-2 d-none d-lg-block">
+ *@            <span class="fw-bold text-muted fs-5 ">
+                @SharedLocalizer["ReserveFood"].Value
+            </span>
         </a>
-            <span class="navbar-text fw-500">@_userName</span>
 
-        <a @onclick="Logout" class="btn btn-outline-danger btn-sm">خروج</a>
+        <div class="d-flex align-items-center gap-2">
+            <span class="fw-medium text-dark d-block" style="font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                @_username
+            </span>
+
+            <button @onclick="Logout" class="btn btn-outline-danger btn-sm border-0 d-flex align-items-center gap-2 p-2 rounded-3">
+                <span class="d-none d-md-inline">@SharedLocalizer["Exit"].Value</span>
+
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M6 12.5a.5.5 0 0 0 .5.5h8a.5.5 0 0 0 .5-.5v-9a.5.5 0 0 0-.5-.5h-8a.5.5 0 0 0-.5.5v2a.5.5 0 0 1-1 0v-2A1.5 1.5 0 0 1 6.5 2h8A1.5 1.5 0 0 1 16 3.5v9a1.5 1.5 0 0 1-1.5 1.5h-8A1.5 1.5 0 0 1 5 12.5v-2a.5.5 0 0 1 1 0v2z"/>
+                    <path fill-rule="evenodd" d="M.146 8.354a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L1.707 7.5H10.5a.5.5 0 0 1 0 1H1.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3z"/>
+                </svg>
+            </button>
+        </div>
     </div>
 </nav>
+<form id="logout-form" method="post" action="/logout" style="display:none"></form>
 
+<script>
+    window.submitLogoutForm = function () {
+        document.getElementById('logout-form').submit();
+    }
+</script>
 @code
 {
-    private void Logout()
+    private async Task Logout()
     {
-        NavigationManager.NavigateTo("/login", forceLoad: true);
+        await JS.InvokeVoidAsync("submitLogoutForm");
     }
 
-    private string? _userName = "در حال بارگذاری...";
+
+    private string? _username = "در حال بارگذاری...";
 
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
         var user = authState.User;
 
         if (user.Identity?.IsAuthenticated == true)
         {
-            _userName = user.FindFirst(ClaimTypes.Name)?.Value;
+            _username = user.FindFirst(ClaimTypes.Name)?.Value;
         }
         else
         {
-            _userName = "کاربر ناشناس";
+            _username = "کاربر ناشناس";
         }
     }
 }

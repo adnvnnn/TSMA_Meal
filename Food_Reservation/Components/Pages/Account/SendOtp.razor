@@ -1,5 +1,4 @@
-﻿@inject IStringLocalizer<SendOtp> Localizer
-
+﻿@inject IStringLocalizer<Login> Localizer
 @using TSMA_Meal.Features.Account
 
 <div class="phone-section active">
@@ -8,7 +7,7 @@
     </label>
 
     <div class="input-group mb-4">
-        <input type="tel" class="form-control" placeholder="09123456789" @bind="PhoneNumber" maxlength="11">
+        <input type="tel" class="form-control" placeholder="09123456789" @bind="_phoneNumber" maxlength="11">
     </div>
 
     @if (_sendCodeError != null)
@@ -16,10 +15,7 @@
         <div class="alert alert-danger mb-4 p-2" role="alert">
             @_sendCodeError
         </div>
-
     }
-
-
 
     @if (_isSendProcessing)
     {
@@ -45,8 +41,10 @@
 @code{
     private bool _isSendProcessing = false;
     private string? _sendCodeError = null;
-    [Parameter, EditorRequired] public string PhoneNumber { get; set; }
-    private bool _codeSent = false;
+
+    private string _phoneNumber = "";
+
+    [Parameter, EditorRequired] public EventCallback<string?> OnHandle { get; set; }
 
     private async Task SendOtpAsync()
     {
@@ -54,20 +52,19 @@
 
         try
         {
-            await Mediator.Send(new SendOtpRequest(PhoneNumber));
+            await Mediator.Send(new SendOtpRequest(_phoneNumber));
 
-            _codeSent = true;
+            await OnHandle.InvokeAsync(_phoneNumber);
 
             _sendCodeError = null;
 
         }
         catch (Exception e)
         {
+            await OnHandle.InvokeAsync();
+
             _sendCodeError = e.Message;
-
-            _codeSent = false;
         }
-
 
         _isSendProcessing = false;
 

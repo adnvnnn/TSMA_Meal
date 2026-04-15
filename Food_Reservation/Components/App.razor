@@ -1,5 +1,4 @@
-﻿@using TSMA_Meal.Components.Layout
-@inject IStringLocalizer<App> Localizer
+﻿@inject IStringLocalizer<App> Localizer
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
@@ -15,15 +14,17 @@
     <link href="css/layout.css" rel="stylesheet">
     <link href="css/home.css" rel="stylesheet">
     <link href="css/login.css" rel="stylesheet">
-    <HeadOutlet @rendermode="new InteractiveServerRenderMode(prerender: false)" />
+
+    <HeadOutlet />
 
 </head>
 
 <body class="d-flex justify-content-center min-vh-100">
 
-    <Routes @rendermode="new InteractiveServerRenderMode(prerender: false)" />
+    <Routes/>
 
     <script src="_framework/blazor.web.js"></script>
+    <script src="bootstrap/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

@@ -1,5 +1,4 @@
-﻿@using System.Text.Encodings.Web
-@inject IStringLocalizer<CanceledModal> Localizer
+﻿@inject IStringLocalizer<CanceledModal> Localizer
 
 @if (ShowSucceed)
 {
@@ -19,7 +18,9 @@
                     </div>
                 </div>
                 <div class="modal-footer border-0 justify-content-center pb-4">
-                    <button type="button" class="btn text-white px-5" @onclick="CloseModal" style="border-radius: 8px;background-color: #ff6b35;">@SharedLocalizer["Understand"].Value</button>
+                    <button type="button" class="btn text-white px-5" @onclick="CloseModal" style="border-radius: 8px; background-color: #ff6b35;">
+                        @SharedLocalizer["Understand"].Value
+                    </button>
                 </div>
             </div>
         </div>

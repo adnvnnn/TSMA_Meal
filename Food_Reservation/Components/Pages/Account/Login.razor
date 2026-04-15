@@ -1,30 +1,45 @@
 ﻿@page "/login"
-
-@using TSMA_Meal.Features.Account
 @layout AccountLayout
-
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 
 <div class="login-box">
 
     <Logo></Logo>
 
-    @if (!_codeSent)
+    @if (!_isCodeSent)
     {
-        <SendOtp PhoneNumber="_phoneNumber"></SendOtp>
+        <SendOtp OnHandle="OnHandleSend"></SendOtp>
     }
     else
     {
-        <CheckOtp Code="_code" PhoneNumber="_phoneNumber"></CheckOtp>
+        <CheckOtp ChangePhoneNumber="OnHandleChangePhone" PhoneNumber="@_phoneNumber"></CheckOtp>
     }
 
 </div>
 
 @code
 {
+    private bool _isCodeSent = false;
+    private string? _phoneNumber;
 
-    private string _phoneNumber = "09146271035";
-    private string _code = "123456";
-    private bool _codeSent = false;
+    private async Task OnHandleSend(string? phoneNumber)
+    {
+        if (phoneNumber != null)
+        {
+            _isCodeSent = true;
+            _phoneNumber = phoneNumber;
+        }
+        else
+        {
+            _isCodeSent = false;
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
 
 
+    private void OnHandleChangePhone()
+    {
+        _isCodeSent = false;
+    }
 }

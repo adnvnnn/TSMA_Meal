@@ -9,8 +9,7 @@ using TSMA_Meal.Tools;
 namespace TSMA_Meal.Features.Account;
 public record SendOtpRequest (string PhoneNumber) : IRequest;
 
-internal class SendOtpHandler(IPersonnelRepository repository,ISmsService smsService,IPersonnelRepository personnelRepository
-    ,IOtpRepository otpRepository) : IRequestHandler<SendOtpRequest>
+internal class SendOtpHandler(IPersonnelRepository repository,ISmsService smsService,IPersonnelRepository personnelRepository,IOtpService otpRepository) : IRequestHandler<SendOtpRequest>
 {
     public async Task Handle(SendOtpRequest request, CancellationToken cancellationToken)
     {
@@ -23,20 +22,24 @@ internal class SendOtpHandler(IPersonnelRepository repository,ISmsService smsSer
 
         if (!await personnelRepository.PersonnelHasAccessByPhone(request.PhoneNumber, cancellationToken)) throw new NotPermittedException();
 
+
+
         var attemptCount = otpRepository.GetAttemptCount(request.PhoneNumber);
 
-        if (attemptCount >= 5) throw new TooManyOtpSentException();
+        if (attemptCount >= SecuritySettingsConfigModel.MaxOtpAttemptsPerDay) throw new TooManyOtpSentException();
 
         var code = new Random().Next(100000, 999999).ToString("D6");
 
-        code = "123456";
-        //await smsService.SendOtpAsync(request.PhoneNumber, code);
+        //code = "123456";
+        await smsService.SendOtpAsync(request.PhoneNumber, code);
 
-        otpRepository.AddAttempt(request.PhoneNumber);
+        otpRepository.SetAttempt(request.PhoneNumber,TimeSpan.FromHours(SecuritySettingsConfigModel.BanDurationHours));
 
         var hashedCode = Md5Hash.Hash(code);
 
-        otpRepository.Add(request.PhoneNumber, hashedCode, TimeSpan.FromMinutes(2));
+        otpRepository.SetOtp(request.PhoneNumber, hashedCode, TimeSpan.FromMinutes(SecuritySettingsConfigModel.OtpExpiryMinutes));
+
+        otpRepository.DeleteCheckAttempt(request.PhoneNumber);
     }
 }
 
@@ -81,7 +84,6 @@ internal class SmsService : ISmsService
             var request = new StringContent(soapEnvelope.ToString(), Encoding.UTF8, "text/xml");
             var response = await client.PostAsync("http://ippanel.com/class/sms/wsdlservice/server.php?wsdl", request);
 
-            // Read the response as a string
             string result = await response.Content.ReadAsStringAsync();
 
             if (!response.IsSuccessStatusCode) throw new SendOptFailedException();
@@ -95,10 +97,11 @@ internal class SmsService : ISmsService
 }
 
 
-internal class InvalidNumberException() : Exception("شماره نامعتبر است");
-internal class SendOptFailedException() : Exception("خطا در ارسال پیامک");
-internal class PersonnelNotExistException() : Exception("فقط پرسنل میتونن استفاده کنن");
-internal class TooManyOtpSentException() : Exception("تلاش بیش از حد. 24 ساعت دیگر امتحان کنید");
+internal class InvalidNumberException() : Exception("شماره تلفن نامعتبر است.");
+internal class SendOptFailedException() : Exception("خطا در ارسال کد. لطفاً مجدد تلاش کنید.");
+internal class PersonnelNotExistException() : Exception("دسترسی ندارید. فقط پرسنل مجازند.");
+internal class TooManyOtpSentException() : Exception("تعداد تلاش‌ها بیش از حد. ۲۴ ساعت دیگر امتحان کنید.");
+
 
 public static class SendOtpRegister
 {
