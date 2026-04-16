@@ -9,11 +9,11 @@ using TSMA_Meal.Tools;
 
 namespace TSMA_Meal.Features.Reserves;
 
-public record ReserveFoodRequest(int FoodId, int PersonnelCode,int Week) : IRequest;
+public record ReserveFoodRequest(int FoodId, int PersonnelCode,int Week) : IRequest<int>;
 
-internal class ReserveFoodHandler(IReserveFoodAccess reserveFoodAccess, IReserveFoodRepository repository, IPersonnelRepository personnelRepository) : IRequestHandler<ReserveFoodRequest>
+internal class ReserveFoodHandler(IReserveFoodAccess reserveFoodAccess, IReserveFoodRepository repository, IPersonnelRepository personnelRepository) : IRequestHandler<ReserveFoodRequest,int>
 {
-    public async Task Handle(ReserveFoodRequest request, CancellationToken cancellationToken)
+    public async Task<int> Handle(ReserveFoodRequest request, CancellationToken cancellationToken)
     {
         //IS PERSONNEL ACTIVE
 
@@ -32,7 +32,7 @@ internal class ReserveFoodHandler(IReserveFoodAccess reserveFoodAccess, IReserve
 
         var meal = await repository.GetMealAsync(request.FoodId, cancellationToken);
 
-        if (meal == null) return /*TODO:Log FATAL*/;
+        if (meal == null) throw new Exception()/*TODO:Log FATAL*/;
 
 
 
@@ -53,7 +53,7 @@ internal class ReserveFoodHandler(IReserveFoodAccess reserveFoodAccess, IReserve
         {
             //IF ALREADY RESERVED
 
-            if (canceledReserve.CanceledReserve == false) return;
+            if (canceledReserve.CanceledReserve == false) return canceledReserve.Id;
 
 
 
@@ -63,7 +63,7 @@ internal class ReserveFoodHandler(IReserveFoodAccess reserveFoodAccess, IReserve
 
             await repository.UpdateReserveAsync(canceledReserve,cancellationToken);
 
-            return;
+            return canceledReserve.Id;
         }
 
 
@@ -93,6 +93,8 @@ internal class ReserveFoodHandler(IReserveFoodAccess reserveFoodAccess, IReserve
         };
 
         await repository.AddReserveAsync(reserve,cancellationToken);
+
+        return reserve.Id;
     }
 }
 

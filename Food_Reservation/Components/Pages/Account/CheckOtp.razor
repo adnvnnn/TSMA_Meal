@@ -133,6 +133,15 @@
     <small class="text-muted d-block text-center">@PhoneNumber</small>
 </div>
 
+
+<script>
+    window.submitOtpForm = function (phone, code) {
+        document.getElementById('otp-phone').value = phone;
+        document.getElementById('otp-code').value = code;
+        document.getElementById('otp-form').submit();
+    }
+</script>
+
 @code {
     [Parameter, EditorRequired] public EventCallback ChangePhoneNumber { get; set; }
     [Parameter, EditorRequired] public string PhoneNumber { get; set; } = "";
@@ -151,3 +160,4 @@
         _isCheckProcessing = false;
     }
 }
+

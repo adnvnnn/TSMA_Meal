@@ -30,7 +30,6 @@ internal class SendOtpHandler(IPersonnelRepository repository,ISmsService smsSer
 
         var code = new Random().Next(100000, 999999).ToString("D6");
 
-        //code = "123456";
         await smsService.SendOtpAsync(request.PhoneNumber, code);
 
         otpRepository.SetAttempt(request.PhoneNumber,TimeSpan.FromHours(SecuritySettingsConfigModel.BanDurationHours));

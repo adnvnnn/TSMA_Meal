@@ -146,7 +146,9 @@
             {
                 try
                 {
-                    await Mediator.Send(new ReserveFoodRequest(food.Id, UserId, PageId));
+                    var reserveId = await Mediator.Send(new ReserveFoodRequest(food.Id, UserId, PageId));
+
+                    food.ReserveId = reserveId;
 
                     food.IsReserved = true;
 

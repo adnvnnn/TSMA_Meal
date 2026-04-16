@@ -1,4 +1,6 @@
 ﻿@page "/"
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
 @using TSMA_Meal.Components.Pages.Meals.Modals
 @inject IStringLocalizer<MealsList> Localizer
 @inject NavigationManager Navigation
@@ -36,12 +38,13 @@
 
 </div>
 
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 @code
 {
     private int _pageId;
     private string _currentWeek = "";
-    private readonly int _userId = 436;
+    private int _userId ;
 
     public List<MealsViewModel> Meals { get; set; } = new();
 
@@ -50,6 +53,13 @@
         var uri = new Uri(Navigation.Uri);
         var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
         _pageId = int.TryParse(query["week"], out var pageId) ? pageId : 0;
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+        var user = authState.User;
+        _userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value != null 
+            ? int.Parse(user.FindFirst(ClaimTypes.NameIdentifier).Value) 
+            : 0;
 
         await LoadAsync(_pageId);
     }
