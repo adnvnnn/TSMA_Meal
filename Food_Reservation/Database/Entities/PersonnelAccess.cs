@@ -1,6 +1,6 @@
-﻿using TSMA_Meal.Entities.Common;
+﻿using TSMA_Meal.Database.Entities.Common;
 
-namespace TSMA_Meal.Entities;
+namespace TSMA_Meal.Database.Entities;
 
 public class PersonnelAccess : BaseEntity
 {

@@ -10,15 +10,15 @@ public static class AuthenticationRegister
         services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
             .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
             {
-                options.LoginPath = "/login";
-                options.LogoutPath = "/logout";
+                options.LoginPath = SecuritySettingsConfigModel.LoginPath;
+                options.LogoutPath = SecuritySettingsConfigModel.LogoutPath;
                 options.ExpireTimeSpan = TimeSpan.FromDays(SecuritySettingsConfigModel.LoginDays);
                 options.SlidingExpiration = true;
                 options.Events = new CookieAuthenticationEvents
                 {
                     OnRedirectToLogin = context =>
                     {
-                        context.Response.Redirect("/login");
+                        context.Response.Redirect(SecuritySettingsConfigModel.LoginPath);
                         return Task.CompletedTask;
                     }
                 };

@@ -3,6 +3,4 @@
 public class ConnectionStringConfigModel
 {
     public static string? Default { get; set; } 
-
-
 }

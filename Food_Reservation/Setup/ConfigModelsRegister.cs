@@ -11,5 +11,8 @@ public static class ConfigModelsRegister
         configuration.GetSection("SmsService").Get<SmsConfigModel>();
 
         configuration.GetSection("SecuritySettings").Get<SecuritySettingsConfigModel>();
+
+        configuration.GetSection("ApiConfig").Get<BaseUrlConfigModel>();
+
     }
 }

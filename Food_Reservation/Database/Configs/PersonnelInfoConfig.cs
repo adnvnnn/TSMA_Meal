@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using TSMA_Meal.Entities;
+using TSMA_Meal.Database.Entities;
 
 namespace TSMA_Meal.Database.Configs;
 

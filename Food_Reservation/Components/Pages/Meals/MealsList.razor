@@ -2,6 +2,7 @@
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
 @using TSMA_Meal.Components.Pages.Meals.Modals
+@using TSMA_Meal.ConfigModels
 @inject IStringLocalizer<MealsList> Localizer
 @inject NavigationManager Navigation
 @rendermode InteractiveServer
@@ -44,7 +45,7 @@
 {
     private int _pageId;
     private string _currentWeek = "";
-    private int _userId ;
+    private int _userId;
 
     public List<MealsViewModel> Meals { get; set; } = new();
 
@@ -57,6 +58,9 @@
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
 
         var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == false) NavigationManager.NavigateTo(SecuritySettingsConfigModel.LoginPath);
+
         _userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value != null 
             ? int.Parse(user.FindFirst(ClaimTypes.NameIdentifier).Value) 
             : 0;

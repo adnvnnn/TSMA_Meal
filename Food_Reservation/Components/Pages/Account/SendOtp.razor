@@ -2,6 +2,7 @@
 @using TSMA_Meal.Features.Account
 
 <div class="phone-section active">
+
     <label class="form-label mb-3 d-block text-dark">
         @Localizer["PhoneNumber"].Value
     </label>
@@ -10,10 +11,10 @@
         <input type="tel" class="form-control" placeholder="09123456789" @bind="_phoneNumber" maxlength="11">
     </div>
 
-    @if (_sendCodeError != null)
+    @if (_errorMessage != null)
     {
         <div class="alert alert-danger mb-4 p-2" role="alert">
-            @_sendCodeError
+            @_errorMessage
         </div>
     }
 
@@ -30,7 +31,7 @@
         </button>
     }
 
-    <hr />
+    <hr/>
 
     <small class="text-muted d-block text-center">
         @Localizer["Example"].Value
@@ -41,14 +42,16 @@
 @code{
     private bool _isSendProcessing = false;
 
-    private string? _sendCodeError = null;
+    private string? _errorMessage = null;
 
-    private string _phoneNumber = "";
+    private string? _phoneNumber = null;
 
     [Parameter, EditorRequired] public EventCallback<string?> OnHandle { get; set; }
 
     private async Task SendOtpAsync()
     {
+        if (string.IsNullOrWhiteSpace(_phoneNumber)) return;
+
         _isSendProcessing = true;
 
         try
@@ -57,14 +60,14 @@
 
             await OnHandle.InvokeAsync(_phoneNumber);
 
-            _sendCodeError = null;
+            _errorMessage = null;
 
         }
         catch (Exception e)
         {
             await OnHandle.InvokeAsync();
 
-            _sendCodeError = e.Message;
+            _errorMessage = e.Message;
         }
 
         _isSendProcessing = false;

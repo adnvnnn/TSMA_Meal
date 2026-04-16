@@ -1,4 +1,4 @@
-﻿namespace TSMA_Meal.Entities.Common;
+﻿namespace TSMA_Meal.Database.Entities.Common;
 
 public class BaseEntity
 {

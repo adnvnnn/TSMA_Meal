@@ -2,9 +2,8 @@
 using System.Text;
 using System.Xml.Linq;
 using TSMA_Meal.ConfigModels;
-using TSMA_Meal.Features.Reserves;
 using TSMA_Meal.Shared;
-using TSMA_Meal.Tools;
+using Encoder = TSMA_Meal.Tools.Encoder;
 
 namespace TSMA_Meal.Features.Account;
 public record SendOtpRequest (string PhoneNumber) : IRequest;
@@ -13,7 +12,7 @@ internal class SendOtpHandler(IPersonnelRepository repository,ISmsService smsSer
 {
     public async Task Handle(SendOtpRequest request, CancellationToken cancellationToken)
     {
-        if (!request.PhoneNumber.StartsWith("09")) throw new InvalidNumberException();
+        if (string.IsNullOrEmpty(request.PhoneNumber) || !request.PhoneNumber.StartsWith("09")) throw new InvalidNumberException();
 
         //IF PERSONNEL EXIST
         var exist = await repository.ExistByPhoneAsync(request.PhoneNumber, cancellationToken);
@@ -23,8 +22,13 @@ internal class SendOtpHandler(IPersonnelRepository repository,ISmsService smsSer
         if (!await personnelRepository.PersonnelHasAccessByPhone(request.PhoneNumber, cancellationToken)) throw new NotPermittedException();
 
 
+        if (otpRepository.ExistOtp(request.PhoneNumber))
+        {
+            throw new TrySendOtpAfterMinutes(SecuritySettingsConfigModel.OtpExpiryMinutes);
+        }
 
-        var attemptCount = otpRepository.GetAttemptCount(request.PhoneNumber);
+
+        var attemptCount = otpRepository.GetSendAttemptCount(request.PhoneNumber);
 
         if (attemptCount >= SecuritySettingsConfigModel.MaxOtpAttemptsPerDay) throw new TooManyOtpSentException();
 
@@ -32,11 +36,11 @@ internal class SendOtpHandler(IPersonnelRepository repository,ISmsService smsSer
 
         await smsService.SendOtpAsync(request.PhoneNumber, code);
 
-        otpRepository.SetAttempt(request.PhoneNumber,TimeSpan.FromHours(SecuritySettingsConfigModel.BanDurationHours));
+        otpRepository.IncreaseSendAttempt(request.PhoneNumber,TimeSpan.FromHours(SecuritySettingsConfigModel.BanDurationHours));
 
-        var hashedCode = Md5Hash.Hash(code);
+        var encoded = Encoder.Encode(code);
 
-        otpRepository.SetOtp(request.PhoneNumber, hashedCode, TimeSpan.FromMinutes(SecuritySettingsConfigModel.OtpExpiryMinutes));
+        otpRepository.SetOtp(request.PhoneNumber, encoded, TimeSpan.FromMinutes(SecuritySettingsConfigModel.OtpExpiryMinutes));
 
         otpRepository.DeleteCheckAttempt(request.PhoneNumber);
     }
@@ -96,6 +100,7 @@ internal class SmsService : ISmsService
 }
 
 
+internal class TrySendOtpAfterMinutes(int minutes) : Exception($"لطفا بعد از {minutes} دقیقه تلاش کنید.");
 internal class InvalidNumberException() : Exception("شماره تلفن نامعتبر است.");
 internal class SendOptFailedException() : Exception("خطا در ارسال کد. لطفاً مجدد تلاش کنید.");
 internal class PersonnelNotExistException() : Exception("دسترسی ندارید. فقط پرسنل مجازند.");

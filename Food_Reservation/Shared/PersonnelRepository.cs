@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Threading;
 using TSMA_Meal.Database;
-using TSMA_Meal.Entities;
+using TSMA_Meal.Database.Entities;
 
 namespace TSMA_Meal.Shared;
 
@@ -13,8 +13,6 @@ public interface IPersonnelRepository
     Task<bool> PersonnelHasAccess(int personnelCode);
     Task<bool> PersonnelHasAccessByPhone(string phone, CancellationToken cancellationToken);
     Task<bool> IsActive(int personnelCode, CancellationToken cancellationToken);
-
-
 }
 
 public class PersonnelRepository(AppDbContext context) : IPersonnelRepository

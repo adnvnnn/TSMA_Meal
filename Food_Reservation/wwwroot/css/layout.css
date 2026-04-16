@@ -13,6 +13,7 @@
 
 body {
     background: var(--light-gray);
+    align-items: center;
 }
 
 @font-face {

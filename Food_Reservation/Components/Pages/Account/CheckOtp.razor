@@ -1,30 +1,32 @@
-﻿@* @inject IStringLocalizer<Login> Localizer
-@inject IHttpClientFactory ClientFactory
+﻿@inject IStringLocalizer<Login> Localizer
+@inject NavigationManager Navigation
+@inject IAuthenticationApiService AuthService
+
+@using System.Timers
+@using TSMA_Meal.ConfigModels
+@using TSMA_Meal.Features.Account
 
 <div class="otp-section active">
+
     <label class="form-label mb-3 d-block text-dark">
         @Localizer["Code"].Value
     </label>
+
     <div class="input-group mb-4">
         <input type="text" class="form-control text-center fw-bold" @bind="_code" maxlength="6">
     </div>
 
-    @if (_checkCodeError != null)
+    @if (_errorMessage != null)
     {
         <div class="alert alert-danger mb-4 p-2" role="alert">
-            @_checkCodeError
+            @_errorMessage
         </div>
-
     }
 
     @if (_isCheckProcessing)
     {
-        <button class="btn-main mb-3" disabled="">
+        <button class="btn-main mb-3" >
             <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-        </button>
-
-        <button class="btn-secondary" disabled="">
-            @Localizer["ChangeNumber"].Value
         </button>
     }
     else
@@ -32,132 +34,156 @@
         <button class="btn-main mb-3" @onclick="CheckOtpAsync">
             @Localizer["Enter"].Value
         </button>
-        <button class="btn-secondary" @onclick="() => ChangePhoneNumber.InvokeAsync()">
+    }
+
+    <div class="d-grid gap-2">
+        @if (_resendCooldown > 0)
+        {
+            <button class="btn btn-light mb-2" >
+                @string.Format(Localizer["CanResendIn"], _resendCooldown)
+            </button>
+        }
+        else
+        {
+            <button class="btn-secondary mb-2" @onclick="ResendCodeAsync">
+                @if (_isResendProcessing)
+                {
+                    <span class="spinner-border spinner-border-sm" role="status"></span>
+                }
+                else
+                {
+                    <span>@Localizer["ResendCode"].Value</span>
+                }
+            </button>
+        }
+
+        <button class="btn-secondary" @onclick="HandleChangePhoneNumber">
             @Localizer["ChangeNumber"].Value
         </button>
-    }
-
-    <hr />
-
-    <small class="text-muted d-block text-center">
-        @PhoneNumber
-    </small>
-</div>
-@inject IJSRuntime JS
-
-@code
-{
-    [Parameter, EditorRequired] public EventCallback ChangePhoneNumber { get; set; }
-
-    [Parameter, EditorRequired] public string PhoneNumber { get; set; } = "09146271035";
-
-    private string _code { get; set; } = "123456";
-
-    private bool _isCheckProcessing = false;
-
-    private string? _checkCodeError = null;
-
-
-    private async Task CheckOtpAsync()
-    {
-        _isCheckProcessing = true;
-
-
-        var content = new FormUrlEncodedContent(new[]
-        {
-            new KeyValuePair<string,string>("phone", PhoneNumber),
-            new KeyValuePair<string,string>("otp", _code)
-        });
-
-        try
-        {
-            var Http = ClientFactory.CreateClient("default");
-
-            var res = await Http.PostAsJsonAsync("/check-otp", new
-            {
-                phoneNumber = PhoneNumber,
-                code = _code
-            });
-            if (res.IsSuccessStatusCode)
-            {
-                //NavigationManager.NavigateTo("/", true);
-                await JS.InvokeVoidAsync("eval", "window.location.href = '/'");
-
-            }
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
-
-        _isCheckProcessing = false;
-    }
-}
- *@
-@inject IStringLocalizer<Login> Localizer
-@inject IJSRuntime JS
-
-<div class="otp-section active">
-    <label class="form-label mb-3 d-block text-dark">
-        @Localizer["Code"].Value
-    </label>
-    <div class="input-group mb-4">
-        <input type="text" class="form-control text-center fw-bold" @bind="_code" maxlength="6">
     </div>
-    @if (_checkCodeError != null)
-    {
-        <div class="alert alert-danger mb-4 p-2" role="alert">
-            @_checkCodeError
-        </div>
-    }
-    @if (_isCheckProcessing)
-    {
-        <button class="btn-main mb-3" disabled="">
-            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-        </button>
-        <button class="btn-secondary" disabled="">
-            @Localizer["ChangeNumber"].Value
-        </button>
-    }
-    else
-    {
-        <button class="btn-main mb-3" @onclick="CheckOtpAsync">
-            @Localizer["Enter"].Value
-        </button>
-        <button class="btn-secondary" @onclick="() => ChangePhoneNumber.InvokeAsync()">
-            @Localizer["ChangeNumber"].Value
-        </button>
-    }
-    <hr />
-    <small class="text-muted d-block text-center">@PhoneNumber</small>
+
+    <hr/>
+    <small class="text-muted d-block text-center">@Localizer["PhoneNumber"].Value : @PhoneNumber</small>
 </div>
 
-
-<script>
-    window.submitOtpForm = function (phone, code) {
-        document.getElementById('otp-phone').value = phone;
-        document.getElementById('otp-code').value = code;
-        document.getElementById('otp-form').submit();
-    }
-</script>
 
 @code {
     [Parameter, EditorRequired] public EventCallback ChangePhoneNumber { get; set; }
     [Parameter, EditorRequired] public string PhoneNumber { get; set; } = "";
-
     private string _code = "";
+
+    private bool _isAnyProcessing = false;
     private bool _isCheckProcessing = false;
-    private string? _checkCodeError = null;
+    private bool _isResendProcessing = false;
+    private string? _errorMessage = null;
+
+    protected override void OnInitialized()
+    {
+        StartTimer();
+    }
 
     private async Task CheckOtpAsync()
     {
-        _isCheckProcessing = true;
-        _checkCodeError = null;
+        if (string.IsNullOrWhiteSpace(_code)) return;
 
-        await JS.InvokeVoidAsync("submitOtpForm", PhoneNumber, _code);
+        _isAnyProcessing = true;
+
+        _isCheckProcessing = true;
+
+        _errorMessage = null;
+
+        try
+        {
+            var result = await AuthService.Login(PhoneNumber, _code);
+
+            if (result)
+            {
+                Navigation.NavigateTo("/",true);
+            }
+            else
+            {
+                _errorMessage = Localizer["WrongCode"].Value;
+            }
+
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+
+        _isAnyProcessing = false;
 
         _isCheckProcessing = false;
+
     }
+
+    private async Task HandleChangePhoneNumber()
+    {
+        _isAnyProcessing = true;
+
+        _errorMessage = null;
+
+        await ChangePhoneNumber.InvokeAsync();
+
+        _isAnyProcessing = false;
+    }
+
+    private async Task ResendCodeAsync()
+    {
+        _isAnyProcessing = true;
+
+        _isResendProcessing = true;
+
+        _errorMessage = null;
+
+        try
+        {
+            await Mediator.Send(new SendOtpRequest(PhoneNumber));
+
+            StartTimer();
+
+        }
+        catch (Exception e)
+        {
+            _errorMessage = e.Message;
+        }
+
+        _isAnyProcessing = false;
+
+        _isResendProcessing = false;
+    }
+
 }
 
+@code
+{
+    private int _resendCooldown;
+
+    private Timer? _timer;
+
+    private void StartTimer()
+    {
+        _resendCooldown = SecuritySettingsConfigModel.OtpExpiryMinutes * 60;
+        _timer?.Dispose();
+        _timer = new Timer(1000);
+        _timer.Elapsed += (sender, e) =>
+        {
+            if (_resendCooldown > 0)
+            {
+                _resendCooldown--;
+                InvokeAsync(StateHasChanged);
+            }
+            else
+            {
+                _timer.Stop();
+            }
+        };
+        _timer.Start();
+    }
+
+
+    public void Dispose()
+    {
+        _timer?.Dispose();
+    }
+}

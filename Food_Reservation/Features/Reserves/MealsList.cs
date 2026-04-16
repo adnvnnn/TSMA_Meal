@@ -1,7 +1,7 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using TSMA_Meal.Database;
-using TSMA_Meal.Entities;
+using TSMA_Meal.Database.Entities;
 using TSMA_Meal.Features.Account;
 using TSMA_Meal.Shared;
 using TSMA_Meal.Tools;
@@ -55,7 +55,9 @@ internal class MealsListHandler(IMealsListRepository repository, IOffDaysReposit
         {
             Id = f.Id,
             OrderDay = f.OrderDay,
-            Name = isWeekEven ? f.Name.Split('/').Skip(1).First() : f.Name.Split('/').First(),
+            Name = isWeekEven
+                ? f.Name.Split('/').Length > 1 ? f.Name.Split('/').Skip(1).First() : f.Name
+                : f.Name.Split('/').FirstOrDefault() ?? f.Name,
             Day = f.Day,
             Restaurant = f.Restaurant,
             ImageUrl = isWeekEven ? f.ImageUrl2 : f.ImageUrl,

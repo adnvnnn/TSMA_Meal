@@ -1,15 +1,16 @@
-﻿@inject IStringLocalizer<App> Localizer
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <base href="/" />
 
-    <title>@Localizer["Title"].Value</title>
+    <title>@SharedLocalizer["Title"].Value</title>
+
     <link href="bootstrap/bootstrap.min.css" rel="stylesheet">
-    
+
     <Favicon></Favicon>
+
 
     <link href="css/layout.css" rel="stylesheet">
     <link href="css/home.css" rel="stylesheet">
@@ -21,10 +22,11 @@
 
 <body class="d-flex justify-content-center min-vh-100">
 
-    <Routes/>
+    <Routes />
 
     <script src="_framework/blazor.web.js"></script>
     <script src="bootstrap/bootstrap.bundle.min.js"></script>
+
 </body>
 
 </html>

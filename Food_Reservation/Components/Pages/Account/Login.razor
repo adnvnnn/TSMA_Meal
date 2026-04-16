@@ -19,7 +19,7 @@
 
 @code
 {
-    private bool _isCodeSent = false;
+    private bool _isCodeSent;
     private string? _phoneNumber;
 
     private async Task OnHandleSend(string? phoneNumber)
@@ -27,6 +27,7 @@
         if (phoneNumber != null)
         {
             _isCodeSent = true;
+
             _phoneNumber = phoneNumber;
         }
         else

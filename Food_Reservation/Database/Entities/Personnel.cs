@@ -1,4 +1,4 @@
-﻿namespace TSMA_Meal.Entities;
+﻿namespace TSMA_Meal.Database.Entities;
 
 public class Personnel
 {

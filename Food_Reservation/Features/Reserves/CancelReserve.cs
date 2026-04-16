@@ -1,7 +1,7 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using TSMA_Meal.Database;
-using TSMA_Meal.Entities;
+using TSMA_Meal.Database.Entities;
 using TSMA_Meal.Features.Account;
 using TSMA_Meal.Shared;
 using TSMA_Meal.Tools;

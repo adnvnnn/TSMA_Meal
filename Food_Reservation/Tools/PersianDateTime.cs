@@ -62,7 +62,6 @@ public static class PersianDateTime
         return (standardIndex + 1) % 7;
     }
 
-
     public static bool IsEvenWeek(int weekOffset)
     {
         var date = DateTime.Now.AddDays(7 * weekOffset);
