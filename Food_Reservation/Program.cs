@@ -12,6 +12,8 @@ builder.Configuration.RegisterLog(builder.Environment.EnvironmentName);
 
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 
+builder.Services.AddControllers();
+
 builder.Services.RegisterLocalization();
 
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
@@ -62,9 +64,7 @@ app.UseAuthorization();
 
 app.UseAntiforgery();
 
-app.MapLogin();
-
-app.MapLogout();
+app.MapControllers();
 
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 

@@ -2,16 +2,16 @@
 
 public interface IAuthenticationApiService
 {
-    Task<bool> Login(string phoneNumber,string code);
+    Task Login(string phoneNumber,string code);
 
     Task Logout();
 }
 
 internal class AuthenticationApiService(HttpClient http) : IAuthenticationApiService
 {
-    public async Task<bool> Login(string phoneNumber, string code)
+    public async Task Login(string phoneNumber, string code)
     {
-        var request = new HttpRequestMessage(HttpMethod.Post, "/check-login")
+        var request = new HttpRequestMessage(HttpMethod.Post, "/check-otp")
         {
             Content = JsonContent.Create(new { Code = code, PhoneNumber = phoneNumber })
         };
@@ -24,7 +24,6 @@ internal class AuthenticationApiService(HttpClient http) : IAuthenticationApiSer
             throw new Exception(error ?? "Error");
         }
 
-        return true;
     }
 
     public async Task Logout()

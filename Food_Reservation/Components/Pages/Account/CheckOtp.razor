@@ -94,16 +94,7 @@
 
         try
         {
-            var result = await AuthService.Login(PhoneNumber, _code);
-
-            if (result)
-            {
-                Navigation.NavigateTo("/",true);
-            }
-            else
-            {
-                _errorMessage = Localizer["WrongCode"].Value;
-            }
+            await AuthService.Login(PhoneNumber, _code);
 
         }
         catch (Exception ex)
