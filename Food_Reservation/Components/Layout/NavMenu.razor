@@ -10,9 +10,11 @@
     <div class="container">
 
         <a class="navbar-brand d-flex align-items-center" href="/">
-            <span class="fw-bold text-muted fs-5 ">
+                        <img src="images/tsma-origin.webp" alt="" width="60" class="me-2 ">
+ 
+@*             <span class="fw-bold text-muted fs-5 ">
                 @SharedLocalizer["ReserveFood"].Value
-            </span>
+            </span> *@
         </a>
 
         <div class="d-flex align-items-center gap-2">
@@ -32,21 +34,6 @@
     </div>
 </nav>
 
-<script>
-    window.submitLogoutForm = async function () {
-
-        const res = await fetch("/logout", {
-            method: "POST",
-            credentials: "include"
-        });
-
-        if (res.ok) {
-            window.location.href = "/";
-        } else {
-            window.location.href = "/";
-        }
-    };
-</script>
 @code
 {
     private string? _username;
@@ -65,3 +52,5 @@
         await Js.InvokeVoidAsync("submitLogoutForm");
     }
 }
+
+<script src="js/logout.js"></script>

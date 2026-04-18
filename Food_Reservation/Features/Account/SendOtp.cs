@@ -103,7 +103,7 @@ internal class SmsService : ISmsService
 internal class TrySendOtpAfterMinutes(int minutes) : Exception($"لطفا بعد از {minutes} دقیقه تلاش کنید.");
 internal class InvalidNumberException() : Exception("شماره تلفن نامعتبر است.");
 internal class SendOptFailedException() : Exception("خطا در ارسال کد. لطفاً مجدد تلاش کنید.");
-internal class PersonnelNotExistException() : Exception("دسترسی ندارید. فقط پرسنل مجازند.");
+internal class PersonnelNotExistException() : Exception("شما دسترسی ندارید. فقط پرسنل مجازند.");
 internal class TooManyOtpSentException() : Exception("تعداد تلاش‌ها بیش از حد. ۲۴ ساعت دیگر امتحان کنید.");
 
 

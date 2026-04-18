@@ -40,25 +40,10 @@
 
 </div>
 
-    <link href="css/home.css" rel="stylesheet">
-    
-    <script>
-        window.submitLogoutForm = async function () {
 
-            const res = await fetch("/logout", {
-                method: "POST",
-                credentials: "include"
-            });
+<script src="js/logout.js"></script>
 
-            if (res.ok) {
-                window.location.href = "/";
-            } else {
-                window.location.href = "/";
-            }
-        };
-    </script>
-
-    @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 @code
 {
@@ -80,8 +65,8 @@
 
         if (user.Identity?.IsAuthenticated == false) NavigationManager.NavigateTo(SecuritySettingsConfigModel.LoginPath);
 
-        _userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value != null 
-            ? int.Parse(user.FindFirst(ClaimTypes.NameIdentifier).Value) 
+        _userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value != null
+            ? int.Parse(user.FindFirst(ClaimTypes.NameIdentifier).Value)
             : 0;
 
         await LoadAsync(_pageId);
@@ -112,14 +97,14 @@
     private async Task OnPageChanged(int page)
     {
         _pageId = page;
-    
+
         var uri = new UriBuilder(Navigation.Uri)
         {
             Query = $"week={page}"
         };
-    
+
         Navigation.NavigateTo(uri.ToString(), forceLoad: false);
-    
+
         await LoadAsync(_pageId);
 
     }
