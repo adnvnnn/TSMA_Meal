@@ -1,6 +1,6 @@
 ﻿@inject IStringLocalizer<Login> Localizer
 @inject NavigationManager Navigation
-@inject IAuthenticationApiService AuthService
+@inject IJSRuntime Js
 
 @using System.Timers
 @using TSMA_Meal.ConfigModels
@@ -66,6 +66,33 @@
     <small class="text-muted d-block text-center">@Localizer["PhoneNumber"].Value : @PhoneNumber</small>
 </div>
 
+<script>
+    window.loginWithOtp = async function (phone, code) {
+
+        try {
+            const formData = new FormData();
+            formData.append("phoneNumber", phone);
+            formData.append("code", code);
+
+            const res = await fetch("/check-otp", {
+                method: "POST",
+                body: formData,
+                credentials: "include"
+            });
+
+            if (!res.ok) {
+                const errorText = await res.text();
+                throw new Error(errorText || "Login failed");
+            }
+
+            window.location.href = "/";
+
+        } catch (err) {
+
+            return err.message;
+        }
+    };
+</script>
 
 @code {
     [Parameter, EditorRequired] public EventCallback ChangePhoneNumber { get; set; }
@@ -94,7 +121,12 @@
 
         try
         {
-            await AuthService.Login(PhoneNumber, _code);
+            var error = await Js.InvokeAsync<string>("loginWithOtp", PhoneNumber, _code);
+
+            if (!string.IsNullOrEmpty(error))
+            {
+                _errorMessage = error;
+            }
 
         }
         catch (Exception ex)

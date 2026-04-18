@@ -33,8 +33,8 @@ internal class SendOtpHandler(IPersonnelRepository repository,ISmsService smsSer
         if (attemptCount >= SecuritySettingsConfigModel.MaxOtpAttemptsPerDay) throw new TooManyOtpSentException();
 
         var code = new Random().Next(100000, 999999).ToString("D6");
-        code = "123456";
-        //await smsService.SendOtpAsync(request.PhoneNumber, code);
+         
+        await smsService.SendOtpAsync(request.PhoneNumber, code);
 
         otpRepository.IncreaseSendAttempt(request.PhoneNumber,TimeSpan.FromHours(SecuritySettingsConfigModel.BanDurationHours));
 

@@ -5,7 +5,8 @@
 @using TSMA_Meal.ConfigModels
 @inject IStringLocalizer<MealsList> Localizer
 @inject NavigationManager Navigation
-@rendermode InteractiveServer
+@inject IJSRuntime Js
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 @attribute [Authorize]
 
 <div class="container">
@@ -39,7 +40,25 @@
 
 </div>
 
-@inject AuthenticationStateProvider AuthenticationStateProvider
+    <link href="css/home.css" rel="stylesheet">
+    
+    <script>
+        window.submitLogoutForm = async function () {
+
+            const res = await fetch("/logout", {
+                method: "POST",
+                credentials: "include"
+            });
+
+            if (res.ok) {
+                window.location.href = "/";
+            } else {
+                window.location.href = "/";
+            }
+        };
+    </script>
+
+    @inject AuthenticationStateProvider AuthenticationStateProvider
 
 @code
 {
@@ -84,9 +103,7 @@
         }
         catch (NotPermittedException e)
         {
-            //TODO:Log Out
-
-            Navigation.NavigateTo("/login", forceLoad: true);
+            await Js.InvokeVoidAsync("submitLogoutForm");
         }
 
         await InvokeAsync(StateHasChanged);

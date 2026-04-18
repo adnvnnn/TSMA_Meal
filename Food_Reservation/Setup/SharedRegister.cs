@@ -14,7 +14,5 @@ public static class SharedRegister
 
         services.AddScoped<IOtpService, OtpService>();
 
-        services.AddScoped<IAuthenticationApiService, AuthenticationApiService>();
-
     }
 }

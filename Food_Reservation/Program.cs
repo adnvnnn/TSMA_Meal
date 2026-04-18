@@ -12,8 +12,6 @@ builder.Configuration.RegisterLog(builder.Environment.EnvironmentName);
 
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 
-builder.Services.AddControllers();
-
 builder.Services.RegisterLocalization();
 
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
@@ -28,7 +26,7 @@ builder.Services.RegisterDataBase();
 
 builder.Services.AddMemoryCache();
 
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(BaseUrlConfigModel.BaseUrl)});
+builder.Services.AddScoped(_ => new HttpClient { BaseAddress = new Uri(BaseUrlConfigModel.BaseUrl)});
 
 builder.Configuration.RegisterConfigModels();
 
@@ -64,7 +62,9 @@ app.UseAuthorization();
 
 app.UseAntiforgery();
 
-app.MapControllers();
+app.MapLogin();
+
+app.MapLogout();
 
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
