@@ -10,9 +10,9 @@
     <div class="container">
 
         <a class="navbar-brand d-flex align-items-center" href="/">
-                        <img src="images/tsma-origin.webp" alt="" width="60" class="me-2 ">
- 
-@*             <span class="fw-bold text-muted fs-5 ">
+            <img src="images/tsma-origin.webp" alt="" width="60" class="me-2 ">
+
+            @*             <span class="fw-bold text-muted fs-5 ">
                 @SharedLocalizer["ReserveFood"].Value
             </span> *@
         </a>
@@ -45,6 +45,10 @@
         if (authState.User.Identity == null || authState.User.Identity.IsAuthenticated == false) NavigationManager.NavigateTo(SecuritySettingsConfigModel.LoginPath);
 
         _username = authState.User.FindFirst(ClaimTypes.Name)?.Value;
+        if (_username?.Length > 30)
+        {
+            _username = _username.Substring(0, 30) + "....";
+        }
     }
 
     private async Task Logout()

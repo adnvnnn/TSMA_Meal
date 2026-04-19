@@ -23,7 +23,14 @@ body {
     font-style: normal;
     font-display: swap;
 }
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+    -webkit-appearance: none !important;
+}
 
+input[type=number] {
+    -moz-appearance: textfield !important;
+}
 .custom-pagination .page-link:focus {
     box-shadow: none !important;
     outline: none !important;
