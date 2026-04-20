@@ -1,102 +1,108 @@
 ﻿@inject IStringLocalizer<MealCard> Localizer
 
 <div class="col-lg-4 col-md-6">
-    <div class="card food-card position-relative @_status h-100">
+    <div class="card food-card position-relative @_status h-100 d-flex flex-column">
+
         <div class="status-dot"></div>
 
-        <img src="@Meal.ImageUrl" class="food-img" alt="@Meal.Name">
+        <div class="card-body p-4 d-flex flex-column h-100">
 
-        <div class="card-body p-4">
+            <div class="d-flex mb-3 gap-3">
 
-            <div class="d-flex mb-3">
+                <img src="@Meal.ImageUrl"
+                     class="food-img"
+                     style="width: 110px; height: 110px; object-fit: cover; border-radius: 12px;"
+                     alt="@Meal.Name">
 
-                <h5 class="fw-bold mb-0 text-center">@Meal.Name</h5>
+                <div class="flex-grow-1 align-content-center">
 
-                @if (Meal.IsExpired)
-                {
-                    @if (Meal.IsReserved)
-                    {
-                        <small style="background-color: #28a745;"
-                               class="rounded-3 text-white fw-bold p-1 me-2">
-                            @Localizer["Reserved"].Value
-                        </small>
-                    }
-                    else
-                    {
-                        <small style="background-color: var(--primary-red);"
-                               class="rounded-3 text-white fw-bold p-1 me-2">
-                            @Localizer["NotReserved"].Value
-                        </small>
-                    }
-                }
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="fw-bold mb-0">@Meal.Name</h5>
+
+                        @if (Meal.IsExpired)
+                        {
+                            @if (Meal.IsReserved)
+                            {
+                                <small class="rounded-3 text-white fw-bold p-1"
+                                       style="background-color:#28a745;">
+                                    @Localizer["Reserved"].Value
+                                </small>
+                            }
+                            else
+                            {
+                                <small class="rounded-3 text-white fw-bold p-1"
+                                       style="background-color: var(--primary-red);">
+                                    @Localizer["NotReserved"].Value
+                                </small>
+                            }
+                        }
+                    </div>
+
+                    <div class="mb-2">
+                        <span class="badge bg-light text-dark small">
+                            @Meal.Restaurant
+                        </span>
+                    </div>
+
+                    <div class="text-muted small mb-2">
+                        @Meal.Day - @Meal.Date
+                    </div>
+
+                    <div>
+                        <span class="text-muted text-decoration-line-through mx-1">
+                            @PriceFormat.FormatNumber(Meal.Price)
+                        </span>
+
+                        <span class="text-danger fw-bold">
+                            @Meal.DiscountedPrice.ToString("N0") @Localizer["Rial"].Value
+                        </span>
+                    </div>
+
+                </div>
             </div>
 
-            <div class="mb-3">
-                <span class="badge bg-light text-dark small">@Meal.Restaurant</span>
-            </div>
-
-            <div class="text-muted small mb-3">@Meal.Day - @Meal.Date</div>
-
-            <div class="mb-4">
-                <span class="h5 text-muted text-decoration-line-through mx-2">
-                    @PriceFormat.FormatNumber(Meal.Price)
-                </span>
-                <span class="h5 text-danger fw-bold">
-                    @Meal.DiscountedPrice.ToString("N0") @Localizer["Rial"].Value
-                </span>
-            </div>
-
-
-            <div class="justify-content-center">
+            <div class="mt-auto">
 
                 @if (Meal.IsLoading)
                 {
-                    <button class="btn-food mb-2 " @onclick="() => ReserveAsync(Meal)" disabled="">
-                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    <button class="btn-food w-100" disabled>
+                        <span class="spinner-border spinner-border-sm me-2"></span>
                     </button>
                 }
                 else
                 {
-                    <button class="btn-food mb-2 " @onclick="() => ReserveAsync(Meal)">
+                    <button class="btn-food w-100" @onclick="() => ReserveAsync(Meal)">
 
                         @if (Meal.IsExpired)
                         {
                             <text>@Localizer["Expired"].Value</text>
-
+                        }
+                        else if (!Meal.IsAvailable)
+                        {
+                            <text>@Localizer["UnAvailable"].Value</text>
+                        }
+                        else if (Meal.IsReserved)
+                        {
+                            <text>
+                                @Localizer["Reserved"].Value
+                                <small class="fw-light text-opacity-25">
+                                    @Localizer["ClickToCancel"]
+                                </small>
+                            </text>
                         }
                         else
                         {
-                            @if (!Meal.IsAvailable)
-                            {
-                                <text>@Localizer["UnAvailable"].Value</text>
-
-                            }
-                            else
-                            {
-                                if (Meal.IsReserved)
-                                {
-                                    <text>
-                                        @Localizer["Reserved"].Value
-
-                                        <small class="fw-light text-opacity-25">@Localizer["ClickToCancel"]</small>
-                                    </text>
-
-                                }
-                                else
-                                {
-                                    <text>@Localizer["Reserve"].Value</text>
-                                }
-                            }
+                            <text>@Localizer["Reserve"].Value</text>
                         }
 
                     </button>
                 }
 
             </div>
+
         </div>
     </div>
 </div>
-
 @code {
 
     [Parameter, EditorRequired] public MealsViewModel Meal { get; set; } = new();
