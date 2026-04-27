@@ -1,6 +1,7 @@
 ﻿using Azure.Core;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Globalization;
 using TSMA_Meal.Database;
 using TSMA_Meal.Database.Entities;
@@ -12,19 +13,26 @@ namespace TSMA_Meal.Features.Reserves;
 
 public record ReserveFoodRequest(int FoodId, int PersonnelCode,int Week) : IRequest<int>;
 
-internal class ReserveFoodHandler(IOffDaysRepository offDaysRepository, IReserveFoodRepository repository, IPersonnelRepository personnelRepository) : IRequestHandler<ReserveFoodRequest,int>
+internal class ReserveFoodHandler(IOffDaysRepository offDaysRepository, IReserveFoodRepository repository, IPersonnelRepository personnelRepository,ILogger<ReserveFoodHandler> logger) : IRequestHandler<ReserveFoodRequest,int>
 {
     public async Task<int> Handle(ReserveFoodRequest request, CancellationToken cancellationToken)
     {
+        if (request.Week is > 1 or < 0) throw new UnknownException();
+
         //For Test
         //request = request with{Week =+ 5};
-        
-        
+
+
         //IS PERSONNEL ACTIVE
 
         var personnel = await personnelRepository.GetPersonnelAsync(request.PersonnelCode, cancellationToken);
 
-        if (personnel == null) throw new PersonnelNotExistException() /*TODO:Log FATAL*/;
+        if (personnel == null)
+        {
+            logger.LogCritical(LogMessages.WrongUserToReserveMeal(request.PersonnelCode));
+
+            throw new PersonnelNotExistException();
+        }
 
 
 
@@ -37,7 +45,12 @@ internal class ReserveFoodHandler(IOffDaysRepository offDaysRepository, IReserve
 
         var meal = await repository.GetMealAsync(request.FoodId, cancellationToken);
 
-        if (meal == null) throw new Exception()/*TODO:Log FATAL*/;
+        if (meal == null)
+        {
+            logger.LogCritical(LogMessages.UserTriedReserveWrongMeal(request.PersonnelCode));
+
+            throw new UnknownException();
+        }
 
 
 

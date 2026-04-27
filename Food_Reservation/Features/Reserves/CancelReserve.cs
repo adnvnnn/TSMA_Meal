@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using TSMA_Meal.Database;
 using TSMA_Meal.Database.Entities;
 using TSMA_Meal.Features.Account;
@@ -10,10 +11,13 @@ namespace TSMA_Meal.Features.Reserves;
 
 public record CancelReserveRequest(int ReserveId,int PersonnelCode) : IRequest;
 
-public class CancelReserveHandler(ICancelReserveRepository repository,IPersonnelRepository personnelRepository) : IRequestHandler<CancelReserveRequest>
+public class CancelReserveHandler(ICancelReserveRepository repository,IPersonnelRepository personnelRepository,ILogger<CancelReserveHandler> logger) : IRequestHandler<CancelReserveRequest>
 {
     public async Task Handle(CancelReserveRequest request, CancellationToken cancellationToken)
     {
+        //For Test
+        //request = request with{Week =+ 5};
+
         if (request.ReserveId == 0) return;
         
 
@@ -21,7 +25,12 @@ public class CancelReserveHandler(ICancelReserveRepository repository,IPersonnel
 
         var personnel = await personnelRepository.GetPersonnelAsync(request.PersonnelCode, cancellationToken);
 
-        if (personnel == null) throw new PersonnelNotExistException() /*TODO:Log FATAL*/;
+        if (personnel == null)
+        {
+            logger.LogCritical(LogMessages.WrongUserToCancelMeal(request.PersonnelCode));
+
+            throw new PersonnelNotExistException();
+        }
 
 
 
@@ -35,9 +44,19 @@ public class CancelReserveHandler(ICancelReserveRepository repository,IPersonnel
 
         var reserve = await repository.GetReserveAsync(request.ReserveId,cancellationToken);
 
-        if (reserve == null) return /*TODO:Log FATAL*/;
+        if (reserve == null)
+        {
+            logger.LogCritical(LogMessages.UserTriedCancelWrongMeal(request.PersonnelCode));
 
-        if (reserve.PersonnelCode != request.PersonnelCode) return /*TODO:Log FATAL*/;
+            throw new UnknownException();
+        }
+
+        if (reserve.PersonnelCode != request.PersonnelCode)
+        {
+            logger.LogCritical(LogMessages.UserTriedCancelOthersMeal(request.PersonnelCode, reserve.PersonnelCode));
+
+            throw new UnknownException();
+        }
 
 
 
