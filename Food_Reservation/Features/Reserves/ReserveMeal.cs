@@ -1,6 +1,7 @@
-﻿using System.Globalization;
+﻿using Azure.Core;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 using TSMA_Meal.Database;
 using TSMA_Meal.Database.Entities;
 using TSMA_Meal.Features.Account;
@@ -11,10 +12,14 @@ namespace TSMA_Meal.Features.Reserves;
 
 public record ReserveFoodRequest(int FoodId, int PersonnelCode,int Week) : IRequest<int>;
 
-internal class ReserveFoodHandler(IReserveFoodAccess reserveFoodAccess, IReserveFoodRepository repository, IPersonnelRepository personnelRepository) : IRequestHandler<ReserveFoodRequest,int>
+internal class ReserveFoodHandler(IOffDaysRepository offDaysRepository, IReserveFoodRepository repository, IPersonnelRepository personnelRepository) : IRequestHandler<ReserveFoodRequest,int>
 {
     public async Task<int> Handle(ReserveFoodRequest request, CancellationToken cancellationToken)
     {
+        //For Test
+        //request = request with{Week =+ 5};
+        
+        
         //IS PERSONNEL ACTIVE
 
         var personnel = await personnelRepository.GetPersonnelAsync(request.PersonnelCode, cancellationToken);
@@ -40,8 +45,17 @@ internal class ReserveFoodHandler(IReserveFoodAccess reserveFoodAccess, IReserve
 
         var reserveDate = PersianDateTime.GetPersianDateByWeekDay(meal.OrderDay, request.Week);
 
-        if (!await reserveFoodAccess.CanReserve(reserveDate, cancellationToken)) throw new ReserveAccessException();
+        var today = PersianDateTime.GetPersianDateByWeekDay((int)DateTime.Now.DayOfWeek);
 
+        //IF IS EXPIRED
+        //EX: foodDate = "1403/01/10"، today = "1403/01/11" => ANSWER: TRUE => return FALSE
+        if (string.CompareOrdinal(reserveDate, today) <= 0) throw new ReserveOutOfDateException();
+
+
+        var offDays = await offDaysRepository.GetOffDaysAsync(cancellationToken);
+
+        //IF IS OFF
+        if (offDays.Contains(reserveDate)) throw new ReserveIsOffException();
 
 
 
@@ -101,33 +115,6 @@ internal class ReserveFoodHandler(IReserveFoodAccess reserveFoodAccess, IReserve
 
 
 
-internal interface IReserveFoodAccess
-{
-    Task<bool> CanReserve(string reserveDate, CancellationToken cancellationToken);
-}
-
-internal class ReserveFoodAccess(IOffDaysRepository offDaysRepository) : IReserveFoodAccess
-{
-    public async Task<bool> CanReserve(string foodDate, CancellationToken cancellationToken)
-    {
-        var today = PersianDateTime.GetPersianDateByWeekDay((int)DateTime.Now.DayOfWeek);
-
-        //IF IS EXPIRED
-        //EX: foodDate = "1403/01/10"، today = "1403/01/11" => ANSWER: TRUE => return FALSE
-        if (string.CompareOrdinal(foodDate, today) <= 0) return false; /*TODO:Log FATAL*/;
-
-
-        var offDays = await offDaysRepository.GetOffDaysAsync(cancellationToken);
-
-        //IF IS OFF
-        return !offDays.Contains(today);
-    }
-}
-
-
-
-
-
 internal interface IReserveFoodRepository
 {
     Task<Meal?> GetMealAsync(int id, CancellationToken cancellationToken);
@@ -176,16 +163,14 @@ internal class ReserveFoodRepository(AppDbContext context) : IReserveFoodReposit
 
 
 
-
-internal class ReserveAccessException : Exception;
+internal class ReserveOutOfDateException() : Exception("زمان رزرو غذا به پایان رسیده است.");
+internal class ReserveIsOffException() : Exception("رزرو امکان پذیر نمیباشد.");
 
 
 public static class ReserveFoodRegister
 {
     public static void RegisterReserveFood(this IServiceCollection services)
     {
-        services.AddScoped<IReserveFoodAccess, ReserveFoodAccess>();
-
         services.AddScoped<IReserveFoodRepository, ReserveFoodRepository>();
     }
 }

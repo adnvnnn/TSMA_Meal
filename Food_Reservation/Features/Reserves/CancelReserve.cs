@@ -10,7 +10,7 @@ namespace TSMA_Meal.Features.Reserves;
 
 public record CancelReserveRequest(int ReserveId,int PersonnelCode) : IRequest;
 
-public class CancelReserveHandler(ICancelReserveAccess cancelReserveAccess,ICancelReserveRepository repository,IPersonnelRepository personnelRepository) : IRequestHandler<CancelReserveRequest>
+public class CancelReserveHandler(ICancelReserveRepository repository,IPersonnelRepository personnelRepository) : IRequestHandler<CancelReserveRequest>
 {
     public async Task Handle(CancelReserveRequest request, CancellationToken cancellationToken)
     {
@@ -43,7 +43,12 @@ public class CancelReserveHandler(ICancelReserveAccess cancelReserveAccess,ICanc
 
         //CAN RESERVE
 
-        if (!cancelReserveAccess.CanCancel(reserve.ReserveDate)) return /*TODO:Log FATAL*/;
+        var today = PersianDateTime.GetPersianDateByWeekDay((int)DateTime.Now.DayOfWeek);
+
+        //IF IS EXPIRED
+        //EX: foodDate = "1403/01/10"، today = "1403/01/11" => ANSWER: TRUE => return FALSE
+        if (string.CompareOrdinal(reserve.ReserveDate, today) <= 0) throw new CancelReserveOutOfDateException();
+
 
 
         //IF CANCELED BEFORE 
@@ -60,23 +65,6 @@ public class CancelReserveHandler(ICancelReserveAccess cancelReserveAccess,ICanc
     }
 }
 
-public interface ICancelReserveAccess
-{
-    bool CanCancel(string foodDate);
-}
-internal class CancelReserveAccess : ICancelReserveAccess
-{
-    public bool CanCancel(string foodDate)
-    {
-        var today = PersianDateTime.GetPersianDateByWeekDay((int)DateTime.Now.DayOfWeek);
-
-        //IF IS EXPIRED
-        //EX: foodDate = "1403/01/10"، today = "1403/01/11" => ANSWER: TRUE => return FALSE
-        if (string.CompareOrdinal(foodDate, today) <= 0) return false; /*TODO:Log FATAL*/;
-
-        return true;
-    }
-}
 
 
 public interface ICancelReserveRepository
@@ -103,14 +91,13 @@ internal class CancelReserveRepository(AppDbContext context) : ICancelReserveRep
     }
 }
 
-
+internal class CancelReserveOutOfDateException() : Exception("زمان لغو رزرو غذا به پایان رسیده است.");
 
 
 public static class CancelReserveRegister
 {
     public static void RegisterCancelReserve(this IServiceCollection services)
     {
-        services.AddScoped<ICancelReserveAccess, CancelReserveAccess>();
 
         services.AddScoped<ICancelReserveRepository, CancelReserveRepository>();
     }
