@@ -108,6 +108,8 @@
 
         await LoadAsync(_pageId);
 
+        await Js.InvokeVoidAsync("eval", "window.scrollTo(0, 0)");
+
     }
 
     private bool _isProcessingAnyMeal;

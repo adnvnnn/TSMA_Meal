@@ -174,4 +174,32 @@
     .food-img {
         height: 150px;
     }
+
+    .food-card:hover {
+        transform: none;
+        box-shadow: none;
+        border-color: #dee2e6; /* یا هر رنگ پیش‌فرضی که داری */
+    }
+
+    .food-card:hover .food-img {
+        transform: none;
+    }
+
+    .available .btn-food:hover:not(:disabled) {
+        background: /* رنگ پیش‌فرض دکمه */;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .reserved .btn-food:hover:not(:disabled) {
+        background: /* رنگ پیش‌فرض دکمه */;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .custom-pagination .page-link:hover {
+        background-color: transparent;
+        color: inherit;
+        border-color: #dee2e6;
+    }
 }
