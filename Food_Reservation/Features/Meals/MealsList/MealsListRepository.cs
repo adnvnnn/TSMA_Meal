@@ -4,7 +4,7 @@ using TSMA_Meal.Database.Entities;
 
 namespace TSMA_Meal.Features.Meals.MealsList;
 
-internal interface IMealsListRepository
+public interface IMealsListRepository
 {
     Task<decimal> GetPersonnelDiscountAsync(int personnelCode, CancellationToken cancellationToken);
 

@@ -5,7 +5,7 @@ using TSMA_Meal.Tools;
 
 namespace TSMA_Meal.Features.Meals.MealsList;
 
-internal class MealsListHandler(IMealsListRepository repository, IOffDaysRepository offDaysRepository, IPersonnelRepository personnelRepository)
+public class MealsListHandler(IMealsListRepository repository, IOffDaysRepository offDaysRepository, IPersonnelRepository personnelRepository)
     : IRequestHandler<MealsListRequest, List<MealsListViewModel>>
 {
     public async Task<List<MealsListViewModel>> Handle(MealsListRequest request, CancellationToken cancellationToken)
