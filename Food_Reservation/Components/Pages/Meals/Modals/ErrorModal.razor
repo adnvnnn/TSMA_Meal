@@ -23,8 +23,7 @@
 }
 
 @code {
-
-    [Parameter, EditorRequired] public string Message { get; set; }
+    [Parameter, EditorRequired] public string Message { get; set; } = "";
 
     [Parameter, EditorRequired] public bool Show { get; set; } = false;
 
@@ -34,7 +33,6 @@
         await OnClose.InvokeAsync();
     }
 
-    [Parameter, EditorRequired]
-    public EventCallback OnClose { get; set; }
+    [Parameter, EditorRequired] public EventCallback OnClose { get; set; }
 
 }

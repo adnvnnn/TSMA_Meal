@@ -1,4 +1,7 @@
 ﻿@using TSMA_Meal.Features.Meals
+@using TSMA_Meal.Features.Meals.CancelReserve
+@using TSMA_Meal.Features.Meals.MealsList
+@using TSMA_Meal.Features.Meals.ReserveMeal
 @inject IStringLocalizer<MealCard> Localizer
 
 <div class="col-lg-4 col-md-6">
@@ -106,7 +109,7 @@
 </div>
 @code {
 
-    [Parameter, EditorRequired] public MealsViewModel Meal { get; set; } = new();
+    [Parameter, EditorRequired] public MealsListViewModel Meal { get; set; } = new();
     [Parameter, EditorRequired] public int UserId { get; set; }
     [Parameter, EditorRequired] public int PageId { get; set; }
     [Parameter] public bool IsProcessingAny { get; set; }
@@ -118,10 +121,10 @@
 
     [Parameter, EditorRequired] public EventCallback OnProcessStart { get; set; }
     [Parameter, EditorRequired] public EventCallback<string> OnError { get; set; }
-    [Parameter, EditorRequired] public EventCallback<MealsViewModel> OnHandleReserve { get; set; }
-    [Parameter, EditorRequired] public EventCallback<MealsViewModel> OnHandleCancelReserve { get; set; }
+    [Parameter, EditorRequired] public EventCallback<MealsListViewModel> OnHandleReserve { get; set; }
+    [Parameter, EditorRequired] public EventCallback<MealsListViewModel> OnHandleCancelReserve { get; set; }
 
-    private async Task ReserveAsync(MealsViewModel food)
+    private async Task ReserveAsync(MealsListViewModel food)
     {
         if (IsProcessingAny) return;
 

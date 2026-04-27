@@ -4,6 +4,7 @@
 @using TSMA_Meal.Components.Pages.Meals.Modals
 @using TSMA_Meal.ConfigModels
 @using TSMA_Meal.Features.Meals
+@using TSMA_Meal.Features.Meals.MealsList
 @inject IStringLocalizer<MealsList> Localizer
 @inject NavigationManager Navigation
 @inject IJSRuntime Js
@@ -52,7 +53,7 @@
     private string _currentWeek = "";
     private int _userId;
 
-    public List<MealsViewModel> Meals { get; set; } = new();
+    public List<MealsListViewModel> Meals { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -121,7 +122,7 @@
         await InvokeAsync(StateHasChanged);
     }
 
-    private void OnHandleReserve(MealsViewModel b)
+    private void OnHandleReserve(MealsListViewModel b)
     {
 
         _reservedMeal = b;
@@ -131,7 +132,7 @@
         _isProcessingAnyMeal = false;
 
     }
-    private void OnHandleCancelReserve(MealsViewModel b)
+    private void OnHandleCancelReserve(MealsListViewModel b)
     {
 
         _canceledMeal = b;
@@ -153,7 +154,7 @@
     }
 
     private bool _showReservedModal;
-    private MealsViewModel? _reservedMeal = new();
+    private MealsListViewModel? _reservedMeal = new();
 
 
     private void HandleReservedModelClose()
@@ -164,7 +165,7 @@
 
 
     private bool _showCanceledModal;
-    private MealsViewModel? _canceledMeal = new();
+    private MealsListViewModel? _canceledMeal = new();
 
     private void HandleCanceledModelClose()
     {

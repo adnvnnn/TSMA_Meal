@@ -1,24 +1,17 @@
-﻿using System.Globalization;
-using MediatR;
-using Microsoft.EntityFrameworkCore;
-using TSMA_Meal.Database;
+﻿using MediatR;
+using System.Globalization;
 using TSMA_Meal.Database.Entities;
 using TSMA_Meal.Features.Account;
 using TSMA_Meal.Shared;
 using TSMA_Meal.Tools;
 
-namespace TSMA_Meal.Features.Meals;
+namespace TSMA_Meal.Features.Meals.ReserveMeal;
 
-public record ReserveFoodRequest(int FoodId, int PersonnelCode,int Week) : IRequest<int>;
-
-internal class ReserveFoodHandler(IOffDaysRepository offDaysRepository, IReserveFoodRepository repository, IPersonnelRepository personnelRepository,ILogger<ReserveFoodHandler> logger) : IRequestHandler<ReserveFoodRequest,int>
+public class ReserveFoodHandler(IOffDaysRepository offDaysRepository, IReserveFoodRepository repository, IPersonnelRepository personnelRepository, ILogger<ReserveFoodHandler> logger) : IRequestHandler<ReserveFoodRequest, int>
 {
     public async Task<int> Handle(ReserveFoodRequest request, CancellationToken cancellationToken)
     {
         if (request.Week is > 1 or < 0) throw new UnknownException();
-
-        //For Test
-        //request = request with{Week =+ 5};
 
 
         //IS PERSONNEL ACTIVE
@@ -86,7 +79,7 @@ internal class ReserveFoodHandler(IOffDaysRepository offDaysRepository, IReserve
 
             canceledReserve.CanceledReserve = false;
 
-            await repository.UpdateReserveAsync(canceledReserve,cancellationToken);
+            await repository.UpdateReserveAsync(canceledReserve, cancellationToken);
 
             return canceledReserve.Id;
         }
@@ -117,71 +110,8 @@ internal class ReserveFoodHandler(IOffDaysRepository offDaysRepository, IReserve
             MACRegisteration = "TEST",
         };
 
-        await repository.AddReserveAsync(reserve,cancellationToken);
+        await repository.AddReserveAsync(reserve, cancellationToken);
 
         return reserve.Id;
-    }
-}
-
-
-
-
-internal interface IReserveFoodRepository
-{
-    Task<Meal?> GetMealAsync(int id, CancellationToken cancellationToken);
-    Task<Reserve?> GetCanceledReserveAsync(int personnelCode, string reserveDate, CancellationToken cancellationToken);
-
-
-
-    Task AddReserveAsync(Reserve reserve, CancellationToken cancellationToken);
-    Task UpdateReserveAsync(Reserve reserve, CancellationToken cancellationToken);
-}
-
-internal class ReserveFoodRepository(AppDbContext context) : IReserveFoodRepository
-{
-
-    public async Task<Meal?> GetMealAsync(int id, CancellationToken cancellationToken)
-    {
-        return await context.Meals.AsNoTracking().FirstOrDefaultAsync(f => f.Id == id, cancellationToken);
-    }
-
-
-
-    public async Task<Reserve?> GetCanceledReserveAsync(int personnelCode, string reserveDate, CancellationToken cancellationToken)
-    {
-        return await context.Reserve
-            .FirstOrDefaultAsync(r => r.PersonnelCode == personnelCode && r.ReserveDate == reserveDate,
-                cancellationToken);
-    }
-
-
-
-    public async Task AddReserveAsync(Reserve reserve,CancellationToken cancellationToken)
-    {
-        await context.Reserve.AddAsync(reserve,cancellationToken);
-
-        await context.SaveChangesAsync(cancellationToken);
-    }
-
-    public async Task UpdateReserveAsync(Reserve reserve, CancellationToken cancellationToken)
-    {
-        context.Reserve.Update(reserve);
-
-        await context.SaveChangesAsync(cancellationToken);
-    }
-}
-
-
-
-
-internal class ReserveOutOfDateException() : Exception("زمان رزرو غذا به پایان رسیده است.");
-internal class ReserveIsOffException() : Exception("رزرو امکان پذیر نمیباشد.");
-
-
-public static class ReserveFoodRegister
-{
-    public static void RegisterReserveFood(this IServiceCollection services)
-    {
-        services.AddScoped<IReserveFoodRepository, ReserveFoodRepository>();
     }
 }

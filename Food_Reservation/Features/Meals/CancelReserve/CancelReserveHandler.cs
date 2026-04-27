@@ -1,16 +1,12 @@
 ﻿using MediatR;
-using Microsoft.EntityFrameworkCore;
-using TSMA_Meal.Database;
-using TSMA_Meal.Database.Entities;
 using TSMA_Meal.Features.Account;
 using TSMA_Meal.Shared;
 using TSMA_Meal.Tools;
 
-namespace TSMA_Meal.Features.Meals;
+namespace TSMA_Meal.Features.Meals.CancelReserve;
 
-public record CancelReserveRequest(int ReserveId,int PersonnelCode) : IRequest;
 
-public class CancelReserveHandler(ICancelReserveRepository repository,IPersonnelRepository personnelRepository,ILogger<CancelReserveHandler> logger) : IRequestHandler<CancelReserveRequest>
+public class CancelReserveHandler(ICancelReserveRepository repository, IPersonnelRepository personnelRepository, ILogger<CancelReserveHandler> logger) : IRequestHandler<CancelReserveRequest>
 {
     public async Task Handle(CancelReserveRequest request, CancellationToken cancellationToken)
     {
@@ -18,7 +14,7 @@ public class CancelReserveHandler(ICancelReserveRepository repository,IPersonnel
         //request = request with{Week =+ 5};
 
         if (request.ReserveId == 0) return;
-        
+
 
         //IS PERSONNEL ACTIVE
 
@@ -41,7 +37,7 @@ public class CancelReserveHandler(ICancelReserveRepository repository,IPersonnel
 
         //GET RESERVATION
 
-        var reserve = await repository.GetReserveAsync(request.ReserveId,cancellationToken);
+        var reserve = await repository.GetReserveAsync(request.ReserveId, cancellationToken);
 
         if (reserve == null)
         {
@@ -79,44 +75,6 @@ public class CancelReserveHandler(ICancelReserveRepository repository,IPersonnel
 
         reserve.CanceledReserve = true;
 
-        await repository.UpdateReserveAsync(reserve,cancellationToken);
-    }
-}
-
-
-
-public interface ICancelReserveRepository
-{
-    Task<Reserve?> GetReserveAsync(int id,CancellationToken cancellationToken);
-
-    Task UpdateReserveAsync(Reserve reserve, CancellationToken cancellationToken);
-
-}
-
-internal class CancelReserveRepository(AppDbContext context) : ICancelReserveRepository
-{
-    public async Task<Reserve?> GetReserveAsync(int id, CancellationToken cancellationToken)
-    {
-        return await context.Reserve
-            .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
-    }
-
-    public async Task UpdateReserveAsync(Reserve reserve, CancellationToken cancellationToken)
-    {
-        context.Reserve.Update(reserve);
-
-        await context.SaveChangesAsync(cancellationToken);
-    }
-}
-
-internal class CancelReserveOutOfDateException() : Exception("زمان لغو رزرو غذا به پایان رسیده است.");
-
-
-public static class CancelReserveRegister
-{
-    public static void RegisterCancelReserve(this IServiceCollection services)
-    {
-
-        services.AddScoped<ICancelReserveRepository, CancelReserveRepository>();
+        await repository.UpdateReserveAsync(reserve, cancellationToken);
     }
 }
