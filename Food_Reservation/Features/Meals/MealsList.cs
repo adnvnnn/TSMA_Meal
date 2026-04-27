@@ -6,7 +6,7 @@ using TSMA_Meal.Features.Account;
 using TSMA_Meal.Shared;
 using TSMA_Meal.Tools;
 
-namespace TSMA_Meal.Features.Reserves;
+namespace TSMA_Meal.Features.Meals;
 
 public record MealsListRequest(int PersonnelCode, int PageId = 0) : IRequest<List<MealsViewModel>>;
 

@@ -1,15 +1,13 @@
-﻿using Azure.Core;
+﻿using System.Globalization;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using System.Globalization;
 using TSMA_Meal.Database;
 using TSMA_Meal.Database.Entities;
 using TSMA_Meal.Features.Account;
 using TSMA_Meal.Shared;
 using TSMA_Meal.Tools;
 
-namespace TSMA_Meal.Features.Reserves;
+namespace TSMA_Meal.Features.Meals;
 
 public record ReserveFoodRequest(int FoodId, int PersonnelCode,int Week) : IRequest<int>;
 

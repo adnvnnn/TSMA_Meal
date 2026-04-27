@@ -1,13 +1,12 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using TSMA_Meal.Database;
 using TSMA_Meal.Database.Entities;
 using TSMA_Meal.Features.Account;
 using TSMA_Meal.Shared;
 using TSMA_Meal.Tools;
 
-namespace TSMA_Meal.Features.Reserves;
+namespace TSMA_Meal.Features.Meals;
 
 public record CancelReserveRequest(int ReserveId,int PersonnelCode) : IRequest;
 

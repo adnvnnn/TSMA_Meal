@@ -3,7 +3,7 @@ using System.Reflection;
 using TSMA_Meal.Components;
 using TSMA_Meal.ConfigModels;
 using TSMA_Meal.Features.Account;
-using TSMA_Meal.Features.Reserves;
+using TSMA_Meal.Features.Meals;
 using TSMA_Meal.Setup;
 
 var builder = WebApplication.CreateBuilder(args);
