@@ -22,6 +22,7 @@
             @foreach (var meal in Meals)
             {
                 <MealCard OnProcessStart="OnProcessStart"
+                          OnProcessStop="OnProcessStop"
                           IsProcessingAny="_isProcessingAnyMeal"
                           OnHandleReserve="OnHandleReserve"
                           OnHandleCancelReserve="OnHandleCancelReserve"
@@ -119,6 +120,12 @@
     private async Task OnProcessStart()
     {
         _isProcessingAnyMeal = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnProcessStop()
+    {
+        _isProcessingAnyMeal = false;
         await InvokeAsync(StateHasChanged);
     }
 

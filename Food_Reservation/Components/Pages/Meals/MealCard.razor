@@ -75,31 +75,43 @@
                 }
                 else
                 {
-                    <button class="btn-food w-100" @onclick="() => ReserveAsync(Meal)">
 
-                        @if (Meal.IsExpired)
-                        {
-                            <text>@Localizer["Expired"].Value</text>
-                        }
-                        else if (!Meal.IsAvailable)
-                        {
-                            <text>@Localizer["UnAvailable"].Value</text>
-                        }
-                        else if (Meal.IsReserved)
-                        {
-                            <text>
+                    @if (Meal.IsExpired)
+                    {
+                        <button class="btn-food w-100" disabled>
+
+                            @Localizer["Expired"].Value
+                        </button>
+
+                    }
+                    else if (!Meal.IsAvailable)
+                    {
+                        <button class="btn-food w-100" disabled>
+
+                            @Localizer["UnAvailable"].Value
+                        </button>
+
+                    }
+                    else if (Meal.IsReserved)
+                    {
+                        <button class="btn-food w-100" @onclick="() => ReserveAsync(Meal)">
+
                                 @Localizer["Reserved"].Value
                                 <small class="fw-light text-opacity-25">
                                     @Localizer["ClickToCancel"]
                                 </small>
-                            </text>
-                        }
-                        else
-                        {
-                            <text>@Localizer["Reserve"].Value</text>
-                        }
+                        </button>
 
-                    </button>
+                    }
+                    else
+                    {
+                        <button class="btn-food w-100" @onclick="() => ReserveAsync(Meal)">
+
+                            @Localizer["Reserve"].Value
+                        </button>
+
+                    }
+
                 }
 
             </div>
@@ -120,6 +132,7 @@
 
 
     [Parameter, EditorRequired] public EventCallback OnProcessStart { get; set; }
+    [Parameter, EditorRequired] public EventCallback OnProcessStop { get; set; }
     [Parameter, EditorRequired] public EventCallback<string> OnError { get; set; }
     [Parameter, EditorRequired] public EventCallback<MealsListViewModel> OnHandleReserve { get; set; }
     [Parameter, EditorRequired] public EventCallback<MealsListViewModel> OnHandleCancelReserve { get; set; }
@@ -148,7 +161,7 @@
                 catch (Exception e)
                 {
                     food.IsReserved = true;
-                    
+
                     await OnError.InvokeAsync(e.Message);
                 }
             }
