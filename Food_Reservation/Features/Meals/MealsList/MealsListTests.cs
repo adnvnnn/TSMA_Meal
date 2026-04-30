@@ -38,13 +38,14 @@ public class MealsListHandlerTests
     public async Task Handle_ValidRequest_ReturnsMealsList()
     {
         // Arrange
-        var request = new MealsListRequest(12345, 0);
+        var pageId = 0;
+        var request = new MealsListRequest(12345, pageId);
         var discount = 10m;
         var meals = GetSampleMeals();
         var reserves = new List<Reserve>();
         var offDays = new List<string>();
 
-        SetupSuccessfulMocks(request.PersonnelCode, discount, meals, reserves, offDays);
+        SetupSuccessfulMocks(request.PersonnelCode, discount, meals, reserves, offDays,pageId);
 
         // Act
         var result = await _handler.Handle(request, CancellationToken.None);
@@ -53,7 +54,7 @@ public class MealsListHandlerTests
         Assert.NotNull(result);
         Assert.Equal(3, result.Count);
         Assert.Equal("صبحانه", result[0].Name);
-        Assert.Equal(10, result[0].DiscountedPrice);
+        Assert.Equal(90, result[0].DiscountedPrice);
     }
 
     [Theory]
@@ -177,13 +178,13 @@ public class MealsListHandlerTests
         var offDays = new List<string>();
 
         // Test with even week (PageId=2)
-        var evenWeekRequest = new MealsListRequest(12345, 2);
-        SetupSuccessfulMocks(evenWeekRequest.PersonnelCode, discount, meals, reserves, offDays);
+        var evenWeekRequest = new MealsListRequest(12345, 0);
+        SetupSuccessfulMocks(evenWeekRequest.PersonnelCode, discount, meals, reserves, offDays,0);
         var evenWeekResult = await _handler.Handle(evenWeekRequest, CancellationToken.None);
 
         // Test with odd week (PageId=1)
         var oddWeekRequest = new MealsListRequest(12345, 1);
-        SetupSuccessfulMocks(oddWeekRequest.PersonnelCode, discount, meals, reserves, offDays);
+        SetupSuccessfulMocks(oddWeekRequest.PersonnelCode, discount, meals, reserves, offDays,1);
         var oddWeekResult = await _handler.Handle(oddWeekRequest, CancellationToken.None);
 
         // Assert
@@ -195,7 +196,7 @@ public class MealsListHandlerTests
     public async Task Handle_WhenDateIsOffDay_SetsIsAvailableFalse()
     {
         // Arrange
-        var request = new MealsListRequest(12345, 1);
+        var request = new MealsListRequest(12345, 0);
         var discount = 0m;
         var meals = GetSampleMeals();
         var reserves = new List<Reserve>();
@@ -217,7 +218,8 @@ public class MealsListHandlerTests
     public async Task Handle_WhenMealIsReservedAndNotCanceled_SetsIsReservedTrue()
     {
         // Arrange
-        var request = new MealsListRequest(12345, 1);
+        var pageId = 1;
+        var request = new MealsListRequest(12345, pageId);
         var discount = 0m;
         var meals = GetSampleMeals();
         var reserves = new List<Reserve>
@@ -226,7 +228,7 @@ public class MealsListHandlerTests
         };
         var offDays = new List<string>();
 
-        SetupSuccessfulMocks(request.PersonnelCode, discount, meals, reserves, offDays);
+        SetupSuccessfulMocks(request.PersonnelCode, discount, meals, reserves, offDays, pageId);
 
         // Act
         var result = await _handler.Handle(request, CancellationToken.None);
@@ -240,7 +242,8 @@ public class MealsListHandlerTests
     public async Task Handle_WhenMealIsReservedButCanceled_SetsIsReservedFalse()
     {
         // Arrange
-        var request = new MealsListRequest(12345, 1);
+        var pageId = 1;
+        var request = new MealsListRequest(12345, pageId);
         var discount = 0m;
         var meals = GetSampleMeals();
         var reserves = new List<Reserve>
@@ -249,7 +252,7 @@ public class MealsListHandlerTests
         };
         var offDays = new List<string>();
 
-        SetupSuccessfulMocks(request.PersonnelCode, discount, meals, reserves, offDays);
+        SetupSuccessfulMocks(request.PersonnelCode, discount, meals, reserves, offDays, pageId);
 
         // Act
         var result = await _handler.Handle(request, CancellationToken.None);
@@ -263,7 +266,8 @@ public class MealsListHandlerTests
     public async Task Handle_WhenMultipleReserves_MatchesCorrectMeal()
     {
         // Arrange
-        var request = new MealsListRequest(12345, 1);
+        var pageId = 1;
+        var request = new MealsListRequest(12345, pageId);
         var discount = 0m;
         var meals = GetSampleMeals();
         var reserves = new List<Reserve>
@@ -273,7 +277,7 @@ public class MealsListHandlerTests
         };
         var offDays = new List<string>();
 
-        SetupSuccessfulMocks(request.PersonnelCode, discount, meals, reserves, offDays);
+        SetupSuccessfulMocks(request.PersonnelCode, discount, meals, reserves, offDays, pageId);
 
         // Act
         var result = await _handler.Handle(request, CancellationToken.None);
@@ -294,13 +298,14 @@ public class MealsListHandlerTests
     public async Task Handle_WhenPageIdNegative_SetsIsExpiredTrue()
     {
         // Arrange
-        var request = new MealsListRequest(12345, -1);  // Past week
+        var pageId = -1;
+        var request = new MealsListRequest(12345, pageId);  // Past week
         var discount = 0m;
         var meals = GetSampleMeals();
         var reserves = new List<Reserve>();
         var offDays = new List<string>();
 
-        SetupSuccessfulMocks(request.PersonnelCode, discount, meals, reserves, offDays);
+        SetupSuccessfulMocks(request.PersonnelCode, discount, meals, reserves, offDays, pageId);
 
         // Act
         var result = await _handler.Handle(request, CancellationToken.None);
@@ -398,7 +403,8 @@ public class MealsListHandlerTests
     public async Task Handle_WhenWeekIsOdd_UsesImageUrl()
     {
         // Arrange
-        var request = new MealsListRequest(12345, 1);  // Odd week
+        var pageId = 1;
+        var request = new MealsListRequest(12345, pageId);  // Odd week
         var discount = 0m;
         var meals = new List<Meal>
         {
@@ -417,7 +423,7 @@ public class MealsListHandlerTests
         var reserves = new List<Reserve>();
         var offDays = new List<string>();
 
-        SetupSuccessfulMocks(request.PersonnelCode, discount, meals, reserves, offDays);
+        SetupSuccessfulMocks(request.PersonnelCode, discount, meals, reserves, offDays, pageId);
 
         // Act
         var result = await _handler.Handle(request, CancellationToken.None);
@@ -498,7 +504,8 @@ public class MealsListHandlerTests
     public async Task Handle_WhenMealNameHasNoSlash_ReturnsFullName()
     {
         // Arrange
-        var request = new MealsListRequest(12345, 1);
+        var pageId = 1;
+        var request = new MealsListRequest(12345, pageId);
         var discount = 0m;
         var meals = new List<Meal>
         {
@@ -517,7 +524,7 @@ public class MealsListHandlerTests
         var reserves = new List<Reserve>();
         var offDays = new List<string>();
 
-        SetupSuccessfulMocks(request.PersonnelCode, discount, meals, reserves, offDays);
+        SetupSuccessfulMocks(request.PersonnelCode, discount, meals, reserves, offDays, pageId);
 
         // Act
         var result = await _handler.Handle(request, CancellationToken.None);
@@ -530,13 +537,14 @@ public class MealsListHandlerTests
     public async Task Handle_WhenNoReserves_ReserveIdIsZero()
     {
         // Arrange
-        var request = new MealsListRequest(12345, 1);
+        var pageId = 1;
+        var request = new MealsListRequest(12345, pageId);
         var discount = 0m;
         var meals = GetSampleMeals();
         var reserves = new List<Reserve>();  // Empty reserves
         var offDays = new List<string>();
 
-        SetupSuccessfulMocks(request.PersonnelCode, discount, meals, reserves, offDays);
+        SetupSuccessfulMocks(request.PersonnelCode, discount, meals, reserves, offDays, pageId);
 
         // Act
         var result = await _handler.Handle(request, CancellationToken.None);
@@ -550,7 +558,7 @@ public class MealsListHandlerTests
     public async Task Handle_WhenMealAvailable_IsAvailableTrue()
     {
         // Arrange
-        var request = new MealsListRequest(12345, 1);
+        var request = new MealsListRequest(12345, 0);
         var discount = 0m;
         var meals = GetSampleMeals();
         var reserves = new List<Reserve>();
@@ -574,7 +582,8 @@ public class MealsListHandlerTests
         decimal discount,
         List<Meal> meals,
         List<Reserve> reserves,
-        List<string> offDays)
+        List<string> offDays,
+        int pageId = 0)
     {
         _mockPersonnelRepository.Setup(x => x.IsActive(personnelCode, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
@@ -584,6 +593,15 @@ public class MealsListHandlerTests
 
         _mockRepository.Setup(x => x.GetPersonnelDiscountAsync(personnelCode, It.IsAny<CancellationToken>()))
             .ReturnsAsync(discount);
+
+        var startOfWeek = PersianDateTime.GetPersianDateByWeekDay((int)DayOfWeek.Saturday, pageId);
+        var endOfWeek = PersianDateTime.GetPersianDateByWeekDay((int)DayOfWeek.Friday, pageId);
+        _mockRepository.Setup(x => x.GetPersonnelReservesIdAsync(
+                personnelCode,
+                startOfWeek,
+                endOfWeek,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(reserves);
 
         _mockRepository.Setup(x => x.GetMealsAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(meals);

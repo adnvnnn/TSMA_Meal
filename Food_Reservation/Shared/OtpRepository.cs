@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
-using StackExchange.Redis;
 
 namespace TSMA_Meal.Shared;
 

@@ -43,36 +43,42 @@ public class MealsListHandler(IMealsListRepository repository, IOffDaysRepositor
 
         var isWeekEven = PersianDateTime.IsEvenWeek(request.PageId);
 
-        return weekMeals.Select(f => new MealsListViewModel
-        {
-            Id = f.Id,
-            OrderDay = f.OrderDay,
-            Name = isWeekEven
-                ? f.Name.Split('/').Length > 1 ? f.Name.Split('/').Skip(1).First() : f.Name
-                : f.Name.Split('/').FirstOrDefault() ?? f.Name,
-            Day = f.Day,
-            Restaurant = f.Restaurant,
-            ImageUrl = isWeekEven ? f.ImageUrl2 : f.ImageUrl,
-            Price = f.Price,
+        return weekMeals.Select(f => {
+            var reserve = personnelReserves.FirstOrDefault(r => r.MealId == f.Id);
+            var nameParts = f.Name?.Split('/') ?? new[] { f.Name ?? "" };
 
-            ReserveId = personnelReserves.FirstOrDefault(r => r.MealId == f.Id) != null ?
-                personnelReserves.FirstOrDefault(r => r.MealId == f.Id).Id : 0,
-
-            DiscountedPrice = Convert.ToInt32(f.Price) * (100 - discount) / 100,
-
-            Date = PersianDateTime.GetPersianDateByWeekDay(f.OrderDay, request.PageId),
-
-            IsExpired = request.PageId < 0 ||
-                        (request.PageId == 0 && PersianDateTime.GetPersianDayOfWeek(f.OrderDay)
-                            <= PersianDateTime.GetPersianDayOfWeek((int)DateTime.Now.DayOfWeek)),
-
-            IsAvailable = !invalidDays.Contains(PersianDateTime.GetPersianDateByWeekDay(f.OrderDay, request.PageId)),
-
-            IsReserved = personnelReserves.Select(p => p.MealId).Contains(f.Id) &&
-                         personnelReserves.FirstOrDefault(r => r.MealId == f.Id) != null ?
-                !personnelReserves.FirstOrDefault(r => r.MealId == f.Id).CanceledReserve : false
-
+            return new MealsListViewModel
+            {
+                Id = f.Id,
+                OrderDay = f.OrderDay,
+                Name = isWeekEven
+                    ? (nameParts.Length > 1 ? nameParts[1] : nameParts[0])
+                    : nameParts[0],
+                Day = f.Day,
+                Restaurant = f.Restaurant,
+                ImageUrl = isWeekEven ? f.ImageUrl2 : f.ImageUrl,
+                Price = f.Price,
+                ReserveId = reserve?.Id ?? 0,
+                DiscountedPrice = Convert.ToInt32(f.Price) * (100 - discount) / 100,
+                Date = PersianDateTime.GetPersianDateByWeekDay(f.OrderDay, request.PageId),
+                IsExpired = request.PageId < 0 ||
+                            (request.PageId == 0 && PersianDateTime.GetPersianDayOfWeek(f.OrderDay)
+                                <= PersianDateTime.GetPersianDayOfWeek((int)DateTime.Now.DayOfWeek)),
+                IsAvailable = !invalidDays.Contains(PersianDateTime.GetPersianDateByWeekDay(f.OrderDay, request.PageId)),
+                IsReserved = reserve != null && !reserve.CanceledReserve
+            };
         }).ToList();
 
+    }
+
+    private string GetMealName(string name, bool isWeekEven)
+    {
+        if (string.IsNullOrEmpty(name)) return string.Empty;
+
+        var parts = name.Split('/');
+        if (isWeekEven)
+            return parts.Length > 1 ? parts[1] : parts[0];
+        else
+            return parts[0];
     }
 }

@@ -66,9 +66,13 @@ public static class PersianDateTime
     {
         var date = DateTime.Now.AddDays(7 * weekOffset);
 
-        var culture = CultureInfo.CurrentCulture;
+        var culture = new CultureInfo("fa");
 
-        var weekNumber =culture.Calendar.GetWeekOfYear(date, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Saturday);
+        var weekNumber = culture.Calendar.GetWeekOfYear(
+            date,
+            CalendarWeekRule.FirstFourDayWeek,
+            DayOfWeek.Saturday
+        );
 
         return weekNumber % 2 == 0;
     }
