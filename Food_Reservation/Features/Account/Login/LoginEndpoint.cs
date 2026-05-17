@@ -1,16 +1,15 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 using TSMA_Meal.ConfigModels;
 using TSMA_Meal.Shared;
+using TSMA_Meal.Shared.Exceptions;
+using TSMA_Meal.Shared.Repositories.Personnel;
+using TSMA_Meal.Shared.Services.Otp;
 using TSMA_Meal.Tools;
 
-namespace TSMA_Meal.Features.Account;
-
-
-public record LoginDto(string PhoneNumber, string Code);
-
+namespace TSMA_Meal.Features.Account.Login;
 
 public static class LoginEndpoint
 {
@@ -82,5 +81,3 @@ public static class LoginEndpoint
         .DisableAntiforgery();
     }
 }
-
-public class InvalidCodeException() : Exception("کد وارد شده صحیح نمیباشد.");

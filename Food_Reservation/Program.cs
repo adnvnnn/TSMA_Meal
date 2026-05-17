@@ -3,10 +3,14 @@ using System.Reflection;
 using TSMA_Meal.Components;
 using TSMA_Meal.ConfigModels;
 using TSMA_Meal.Features.Account;
+using TSMA_Meal.Features.Account.Login;
+using TSMA_Meal.Features.Account.Logout;
+using TSMA_Meal.Features.Account.SendOtp;
 using TSMA_Meal.Features.Meals.CancelReserve;
 using TSMA_Meal.Features.Meals.MealsList;
 using TSMA_Meal.Features.Meals.ReserveMeal;
 using TSMA_Meal.Setup;
+using TSMA_Meal.Shared.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,6 +36,7 @@ builder.Services.AddScoped(_ => new HttpClient { BaseAddress = new Uri(BaseUrlCo
 
 builder.Configuration.RegisterConfigModels();
 
+builder.Services.AddExceptionHandler<ExceptionHandler>();
 
 builder.Services.RegisterSendOtp();
 

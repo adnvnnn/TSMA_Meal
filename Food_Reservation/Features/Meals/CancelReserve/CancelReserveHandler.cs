@@ -1,6 +1,10 @@
 ﻿using MediatR;
 using TSMA_Meal.Features.Account;
+using TSMA_Meal.Features.Account.SendOtp.Exceptions;
+using TSMA_Meal.Features.Meals.CancelReserve.Exceptions;
 using TSMA_Meal.Shared;
+using TSMA_Meal.Shared.Exceptions;
+using TSMA_Meal.Shared.Repositories.Personnel;
 using TSMA_Meal.Tools;
 
 namespace TSMA_Meal.Features.Meals.CancelReserve;
@@ -10,9 +14,6 @@ public class CancelReserveHandler(ICancelReserveRepository repository, IPersonne
 {
     public async Task Handle(CancelReserveRequest request, CancellationToken cancellationToken)
     {
-        //For Test
-        //request = request with{Week =+ 5};
-
         if (request.ReserveId == 0) return;
 
 

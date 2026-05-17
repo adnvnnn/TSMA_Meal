@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 
-namespace TSMA_Meal.Features.Account;
-
+namespace TSMA_Meal.Features.Account.Logout;
 
 public static class LogoutEndpoints
 {

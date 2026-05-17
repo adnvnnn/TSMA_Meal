@@ -1,13 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TSMA_Meal.Database;
 
-namespace TSMA_Meal.Shared;
+namespace TSMA_Meal.Shared.Repositories.OffDays;
 
-public interface IOffDaysRepository
-{
-    Task<List<string>> GetOffDaysAsync(CancellationToken cancellationToken);
-
-}
 public class OffDaysRepository(AppDbContext context) : IOffDaysRepository
 {
     public async Task<List<string>> GetOffDaysAsync(CancellationToken cancellationToken)

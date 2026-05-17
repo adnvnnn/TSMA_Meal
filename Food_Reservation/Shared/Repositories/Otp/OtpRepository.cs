@@ -1,16 +1,6 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
 
-namespace TSMA_Meal.Shared;
-
-
-public interface IOtpRepository
-{
-    void Set(string phone, string code, TimeSpan? window = null);
-
-    string? Get(string phone);
-
-    void Delete(string phone);
-}
+namespace TSMA_Meal.Shared.Repositories.Otp;
 
 internal class OtpRepository(IMemoryCache cache) : IOtpRepository
 {
