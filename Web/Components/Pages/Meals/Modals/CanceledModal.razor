@@ -1,0 +1,45 @@
+﻿@using TSMA_Meal.Features.Meals
+@using TSMA.Meal.Web.Features.Meals.MealsList
+@inject IStringLocalizer<CanceledModal> Localizer
+
+@if (ShowSucceed)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
+                <div class="modal-header border-0 text-white" style="border-radius: 15px 15px 0 0; background-color: #ff6b35;">
+                    <h5 class="modal-title w-100 text-center">@Localizer["ReservedCanceledTitle"]</h5>
+                </div>
+                <div class="modal-body text-center p-4">
+
+                    <p class="mb-2 mt-3">@((MarkupString) string.Format(Localizer["ReserveCanceled"].Value,(Meal.Name)))</p>
+
+                    <div class="bg-light p-3 rounded-3 mt-3">
+                        <span class="text-muted small">@Localizer["CanceledDate"].Value</span>
+                        <div class="fw-bold mt-1">@Meal.Date</div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 justify-content-center pb-4">
+                    <button type="button" class="btn text-white px-5" @onclick="CloseModal" style="border-radius: 8px; background-color: #ff6b35;">
+                        @SharedLocalizer["Understand"].Value
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public bool ShowSucceed { get; set; } = false;
+
+    [Parameter, EditorRequired] public MealsListViewModel Meal { get; set; } = new();
+
+
+    [Parameter, EditorRequired]  public EventCallback OnClose { get; set; }
+
+    private async Task CloseModal()
+    {
+        ShowSucceed = false;
+        await OnClose.InvokeAsync();
+    }
+}

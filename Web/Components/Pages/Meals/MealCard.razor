@@ -1,0 +1,196 @@
+﻿@using TSMA_Meal.Features.Meals
+@using TSMA.Meal.Web.Features.Meals.CancelReserve
+@using TSMA.Meal.Web.Features.Meals.MealsList
+@using TSMA.Meal.Web.Features.Meals.ReserveMeal
+@using TSMA.Meal.Web.Tools
+@inject IStringLocalizer<MealCard> Localizer
+
+<div class="col-lg-4 col-md-6">
+    <div class="card food-card position-relative @_status h-100 d-flex flex-column">
+
+        <div class="status-dot"></div>
+
+        <div class="card-body p-4 d-flex flex-column h-100">
+
+            <div class="d-flex mb-3 gap-3">
+
+                <img src="@Meal.ImageUrl"
+                     class="food-img"
+                     style="width: 110px; height: 110px; object-fit: cover; border-radius: 12px;"
+                     alt="@Meal.Name">
+
+                <div class="flex-grow-1 align-content-center">
+
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="fw-bold mb-0">@Meal.Name</h5>
+
+                        @if (Meal.IsExpired)
+                        {
+                            @if (Meal.IsReserved)
+                            {
+                                <small class="rounded-3 text-white fw-bold p-1"
+                                       style="background-color:#28a745;">
+                                    @Localizer["Reserved"].Value
+                                </small>
+                            }
+                            else
+                            {
+                                <small class="rounded-3 text-white fw-bold p-1"
+                                       style="background-color: var(--primary-red);">
+                                    @Localizer["NotReserved"].Value
+                                </small>
+                            }
+                        }
+                    </div>
+
+                    <div class="mb-2">
+                        <span class="badge bg-light text-dark small">
+                            @Meal.Restaurant
+                        </span>
+                    </div>
+
+                    <div class="text-muted small mb-2">
+                        @Meal.Day - @Meal.Date
+                    </div>
+
+                    <div>
+                        <span class="text-muted text-decoration-line-through mx-1">
+                            @PriceFormat.FormatNumber(Meal.Price)
+                        </span>
+
+                        <span class="text-danger fw-bold">
+                            @Meal.DiscountedPrice.ToString("N0") @Localizer["Rial"].Value
+                        </span>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="mt-auto">
+
+                @if (Meal.IsLoading)
+                {
+                    <button class="btn-food w-100" disabled>
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                    </button>
+                }
+                else
+                {
+
+                    @if (Meal.IsExpired)
+                    {
+                        <button class="btn-food w-100" disabled>
+
+                            @Localizer["Expired"].Value
+                        </button>
+
+                    }
+                    else if (!Meal.IsAvailable)
+                    {
+                        <button class="btn-food w-100" disabled>
+
+                            @Localizer["UnAvailable"].Value
+                        </button>
+
+                    }
+                    else if (Meal.IsReserved)
+                    {
+                        <button class="btn-food w-100" @onclick="() => ReserveAsync(Meal)">
+
+                                @Localizer["Reserved"].Value
+                                <small class="fw-light text-opacity-25">
+                                    @Localizer["ClickToCancel"]
+                                </small>
+                        </button>
+
+                    }
+                    else
+                    {
+                        <button class="btn-food w-100" @onclick="() => ReserveAsync(Meal)">
+
+                            @Localizer["Reserve"].Value
+                        </button>
+
+                    }
+
+                }
+
+            </div>
+
+        </div>
+    </div>
+</div>
+@code {
+
+    [Parameter, EditorRequired] public MealsListViewModel Meal { get; set; } = new();
+    [Parameter, EditorRequired] public int UserId { get; set; }
+    [Parameter, EditorRequired] public int PageId { get; set; }
+    [Parameter] public bool IsProcessingAny { get; set; }
+
+    private string? _status => Meal.IsExpired || !Meal.IsAvailable
+        ? "expired"
+        : (Meal.IsReserved ? "reserved" : "available");
+
+
+    [Parameter, EditorRequired] public EventCallback OnProcessStart { get; set; }
+    [Parameter, EditorRequired] public EventCallback OnProcessStop { get; set; }
+    [Parameter, EditorRequired] public EventCallback<string> OnError { get; set; }
+    [Parameter, EditorRequired] public EventCallback<MealsListViewModel> OnHandleReserve { get; set; }
+    [Parameter, EditorRequired] public EventCallback<MealsListViewModel> OnHandleCancelReserve { get; set; }
+
+    private async Task ReserveAsync(MealsListViewModel food)
+    {
+        if (IsProcessingAny) return;
+
+        food.IsLoading = true;
+
+        await OnProcessStart.InvokeAsync();
+
+        @if (food is { IsExpired: false, IsAvailable: true })
+        {
+            if (food.IsReserved)
+            {
+                try
+                {
+                    await Mediator.Send(new CancelReserveRequest(food.ReserveId, UserId));
+
+                    food.IsReserved = false;
+
+                    await OnHandleCancelReserve.InvokeAsync(food);
+
+                }
+                catch (Exception e)
+                {
+                    food.IsReserved = true;
+
+                    await OnError.InvokeAsync(e.Message);
+                }
+            }
+            else
+            {
+                try
+                {
+                    var reserveId = await Mediator.Send(new ReserveFoodRequest(food.Id, UserId, PageId));
+
+                    food.ReserveId = reserveId;
+
+                    food.IsReserved = true;
+
+                    await OnHandleReserve.InvokeAsync(food);
+
+                }
+                catch (Exception e)
+                {
+                    food.IsReserved = false;
+
+                    await OnError.InvokeAsync(e.Message);
+                }
+            }
+        }
+
+        food.IsLoading = false;
+
+        await InvokeAsync(StateHasChanged);
+
+    }
+}

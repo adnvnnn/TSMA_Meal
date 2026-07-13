@@ -1,0 +1,200 @@
+﻿@page "/"
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using TSMA_Meal.Components.Pages.Meals.Modals
+@using TSMA_Meal.Features.Meals
+@using TSMA.Meal.Web.ConfigModels
+@using TSMA.Meal.Web.Features.Meals.MealsList
+@using TSMA.Meal.Web.Shared.Exceptions
+@inject IStringLocalizer<MealsList> Localizer
+@inject NavigationManager Navigation
+@inject IJSRuntime Js
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@attribute [Authorize]
+
+<div class="container">
+
+    <MealMenu CurrentWeek="@_currentWeek"></MealMenu>
+
+    @if (Meals.Any())
+    {
+        <div class="row g-4">
+
+            @foreach (var meal in Meals)
+            {
+                <MealCard OnProcessStart="OnProcessStart"
+                          OnProcessStop="OnProcessStop"
+                          IsProcessingAny="_isProcessingAnyMeal"
+                          OnHandleReserve="OnHandleReserve"
+                          OnHandleCancelReserve="OnHandleCancelReserve"
+                          OnError="OnHandleError"
+                          PageId="_pageId" UserId="_userId" Meal="meal">
+
+                </MealCard>
+            }
+
+        </div>
+
+        <MealsPagination OnPageChanged="OnPageChanged" PageId="_pageId"></MealsPagination>
+    }
+    else
+    {
+        <Loading></Loading>
+    }
+
+</div>
+
+
+<script src="js/logout.js"></script>
+
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@code
+{
+    private int _pageId;
+    private string _currentWeek = "";
+    private int _userId;
+
+    public List<MealsListViewModel> Meals { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var uri = new Uri(Navigation.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+        _pageId = int.TryParse(query["week"], out var pageId) ? pageId : 0;
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == false) NavigationManager.NavigateTo(SecuritySettingsConfigModel.LoginPath);
+
+        _userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value != null
+            ? int.Parse(user.FindFirst(ClaimTypes.NameIdentifier).Value)
+            : 0;
+
+        await LoadAsync(_pageId);
+    }
+
+    private async Task LoadAsync(int pageId = 0)
+    {
+        try
+        {
+            _currentWeek = pageId switch
+            {
+                0 => Localizer["Current"].Value,
+                1 => Localizer["Next"].Value,
+                -1 => Localizer["Prev"].Value,
+                _ => _currentWeek
+            };
+
+            Meals = await Mediator.Send(new MealsListRequest(_userId, pageId));
+        }
+        catch (NotPermittedException e)
+        {
+            await Js.InvokeVoidAsync("submitLogoutForm");
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnPageChanged(int page)
+    {
+        _pageId = page;
+
+        var uri = new UriBuilder(Navigation.Uri)
+        {
+            Query = $"week={page}"
+        };
+
+        Navigation.NavigateTo(uri.ToString(), forceLoad: false);
+
+        await LoadAsync(_pageId);
+
+        await Js.InvokeVoidAsync("eval", "window.scrollTo(0, 0)");
+
+    }
+
+    private bool _isProcessingAnyMeal;
+
+
+    private async Task OnProcessStart()
+    {
+        _isProcessingAnyMeal = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnProcessStop()
+    {
+        _isProcessingAnyMeal = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void OnHandleReserve(MealsListViewModel b)
+    {
+
+        _reservedMeal = b;
+
+        _showReservedModal = true;
+
+        _isProcessingAnyMeal = false;
+
+    }
+    private void OnHandleCancelReserve(MealsListViewModel b)
+    {
+
+        _canceledMeal = b;
+
+        _showCanceledModal = true;
+
+        _isProcessingAnyMeal = false;
+
+    }
+    private void OnHandleError(string message)
+    {
+
+        _showErrorModal = true;
+
+        _errorMessage = message;
+
+        _isProcessingAnyMeal = false;
+
+    }
+
+    private bool _showReservedModal;
+    private MealsListViewModel? _reservedMeal = new();
+
+
+    private void HandleReservedModelClose()
+    {
+        _showReservedModal = false;
+        _reservedMeal = null;
+    }
+
+
+    private bool _showCanceledModal;
+    private MealsListViewModel? _canceledMeal = new();
+
+    private void HandleCanceledModelClose()
+    {
+        _showCanceledModal = false;
+        _canceledMeal = null;
+
+    }
+
+
+    private bool _showErrorModal;
+    private string? _errorMessage = "";
+
+    private void HandleErrorModelClose()
+    {
+        _showErrorModal = false;
+
+    }
+}
+
+<ReservedModal OnClose="HandleReservedModelClose" Meal="_reservedMeal" ShowSucceed="_showReservedModal"></ReservedModal>
+
+<CanceledModal OnClose="HandleCanceledModelClose" Meal="_canceledMeal" ShowSucceed="_showCanceledModal"></CanceledModal>
+
+<ErrorModal OnClose="HandleErrorModelClose" Message="@_errorMessage" Show="_showErrorModal"></ErrorModal>
