@@ -43,8 +43,8 @@ The project also uses **CQRS** with **MediatR** to handle application requests.
 ### Prerequisites
 
 - .NET 8 SDK
-- SQL Server
-- IPPanel SMS Service Account
+- SQL Server (not needed in [demo mode](#demo-mode)) 
+- IPPanel SMS Service Account (not needed in [demo mode](#demo-mode))
 
 ### Installation
 
@@ -93,6 +93,51 @@ Update the configuration with your environment-specific values.
 | `SecuritySettings:MaxOtpAttemptsPerDay` | Daily limit of OTP requests per user |
 | `SecuritySettings:MaxCheckOtpAttemptsPerSend` | Verification attempts allowed per sent code |
 | `SecuritySettings:BanDurationHours` | Lockout duration after exceeding the limits |
+
+### Demo Mode (no database, no SMS account)
+
+The example configuration ships with `DemoMode` enabled. In demo mode the application uses an in-memory database seeded with one employee and a week of meals (Saturday to Thursday), and the OTP code is printed to the console instead of being sent through IPPanel.
+
+Start the app in demo mode:
+
+```bash
+dotnet run --project Web
+```
+
+To enable it without editing the file, pass the setting on the command line:
+
+```bash
+DemoMode=true dotnet run --project Web
+```
+
+On Windows PowerShell:
+
+```powershell
+$env:DemoMode="true"; dotnet run --project Web
+```
+
+Sign in with the seeded demo employee:
+
+| Field | Value |
+|---|---|
+| Name | کاربر نمایشی |
+| Personnel code | `1001` |
+| Phone number | `09120000000` |
+| OTP code | printed in the console after pressing send |
+
+What the demo database contains:
+
+- one active employee with the details above, a 20% discount and food reservation access
+- meals for Saturday to Thursday (Friday is a weekend day), two dishes per day, each with its own photo under `Web/wwwroot/images/meals/`
+- all meals belong to "رستوران نمایشی" and cost `150000`
+
+When you press send on the login page, the console prints a line like:
+
+```
+DEMO OTP for 09120000000: 123456
+```
+
+Enter that code to finish signing in. The in-memory data is not persisted — restarting the app clears any reservations. Set `DemoMode` to `false` to use SQL Server and IPPanel again.
 
 ### Run the Application
 

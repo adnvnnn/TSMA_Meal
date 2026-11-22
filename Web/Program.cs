@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using System.Reflection;
 using TSMA.Meal.Web.Components;
 using TSMA.Meal.Web.ConfigModels;
@@ -12,6 +12,8 @@ using TSMA.Meal.Web.Setup;
 using TSMA.Meal.Web.Shared.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var demoMode = builder.Configuration.GetValue<bool>("DemoMode");
 
 builder.Configuration.RegisterLog(builder.Environment.EnvironmentName);
 
@@ -27,7 +29,7 @@ builder.Services.RegisterAuthentication();
 
 builder.Services.AddAuthorization();
 
-builder.Services.RegisterDataBase();
+builder.Services.RegisterDataBase(demoMode);
 
 builder.Services.AddMemoryCache();
 
@@ -37,7 +39,7 @@ builder.Configuration.RegisterConfigModels();
 
 builder.Services.AddExceptionHandler<ExceptionHandler>();
 
-builder.Services.RegisterSendOtp();
+builder.Services.RegisterSendOtp(demoMode);
 
 builder.Services.RegisterMealsList();
 
@@ -49,6 +51,15 @@ builder.Services.RegisterShared();
 
 
 var app = builder.Build();
+
+if (demoMode)
+{
+    app.SeedDemoData();
+
+    app.Logger.LogWarning(
+        "DEMO MODE: in-memory data and console OTP. Sign in with {Phone}; the code is printed in this console.",
+        DemoDataSeeder.DemoPhone);
+}
 
 if (!app.Environment.IsDevelopment())
 {
