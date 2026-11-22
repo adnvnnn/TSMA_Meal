@@ -6,7 +6,7 @@ A web-based meal reservation system built using **Vertical Slice Architecture**,
 
 TSMA Meal provides employees with a centralized platform to authenticate via SMS OTP, view weekly meal menus, and manage their meal reservations.
 
-The application was built on top of an existing legacy database with a non-standard schema and structural limitations.
+The application was built on top of an existing legacy database with a non-standard schema, structural limitations, and complex business logic embedded in its existing implementation. Adapting the application to these constraints required handling legacy behaviors, including custom scheduling rules such as alternating-week changes.
 
 ## Architecture
 
@@ -115,11 +115,13 @@ Default development URLs:
 
 ## Database Notes
 
-This project uses an existing legacy database inherited from the previous application. Its schema contains non-standard design decisions and structural limitations.
+This project uses an existing legacy database inherited from the previous application. Both its database schema and parts of the existing application logic contain non-standard design decisions, structural limitations, and tightly coupled business rules.
+
+The application had to accommodate these constraints, including complex scheduling behaviors such as alternating-week changes, rather than relying on a clean or conventional data model.
 
 No Entity Framework migrations are included. The application expects the existing database structure to be available before running.
 
-Database-related resources are located in `Web/Database`.
+Database-related resources are located in Web/Database.
 
 ## Testing
 
