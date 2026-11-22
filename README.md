@@ -1,102 +1,150 @@
 # TSMA Meal
 
-A meal reservation web application for TSMA personnel. Users sign in with an SMS one-time
-password, browse the weekly menu, reserve meals and cancel their reservations. The UI is in
-Persian (RTL).
+A web-based meal reservation system built using **Vertical Slice Architecture**, developed to replace TSMA's previous meal reservation application.
 
-## Tech stack
+## Overview
 
-- .NET 8 / ASP.NET Core Blazor Server (interactive server components)
-- EF Core 8 with SQL Server
-- MediatR (CQRS handlers) and AutoMapper
-- Cookie authentication with OTP verification delivered through an SMS provider (ippanel SOAP API)
-- xUnit + Moq for tests
+TSMA Meal provides employees with a centralized platform to authenticate via SMS OTP, view weekly meal menus, and manage their meal reservations.
 
-## Requirements
+The application was built on top of an existing legacy database with a non-standard schema and structural limitations.
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- A SQL Server instance reachable from the machine running the app
-- An SMS account (username, password, sender number and verification pattern code)
+## Architecture
 
-## Getting started
+The application follows **Vertical Slice Architecture**, organizing the codebase around business features rather than technical layers.
 
-1. Clone the repository.
+Each feature encapsulates its related application logic, keeping concerns isolated and making the codebase easier to maintain and extend.
 
-   ```bash
-   git clone https://github.com/adnvnnn/TSMA_Meal.git
-   cd TSMA_Meal
-   ```
+The project also uses **CQRS** with **MediatR** to handle application requests.
 
-2. Create your local configuration from the example template.
+## Features
 
-   ```bash
-   cp Web/appsettings.Development.Example.json Web/appsettings.Development.json
-   ```
+- SMS OTP Authentication
+- Weekly Meal Menu
+- Meal Reservations
+- Reservation Cancellation
+- Persian RTL Interface
 
-   Then edit `Web/appsettings.Development.json` and fill in:
+## Tech Stack
 
-   | Setting | Description |
-   | --- | --- |
-   | `ConnectionStrings:Default` | SQL Server connection string |
-   | `ApiConfig:BaseUrl` | Base URL used by the app's HTTP client |
-   | `SmsService:Username` / `Password` | SMS provider credentials |
-   | `SmsService:Sender` | Sender number |
-   | `SmsService:VerificationPatternCode` | Pattern code used for the OTP message |
-   | `SmsService:Url` | SMS provider WSDL endpoint |
+| Technology | Purpose |
+|---|---|
+| .NET 8 | Backend Framework |
+| ASP.NET Core | Web Application |
+| Blazor Web App (Interactive Server) | UI Framework |
+| Entity Framework Core 8 | ORM |
+| SQL Server | Database |
+| MediatR | CQRS |
+| AutoMapper | Object Mapping |
+| xUnit | Testing |
+| Moq | Mocking |
 
-3. Restore and build.
+## Getting Started
 
-   ```bash
-   dotnet restore
-   dotnet build
-   ```
+### Prerequisites
 
-4. Run the app.
+- .NET 8 SDK
+- SQL Server
+- IPPanel SMS Service Account
 
-   ```bash
-   dotnet run --project Web
-   ```
+### Installation
 
-   With the `https` launch profile the app listens on <https://localhost:7096> (and
-   <http://localhost:5209>); see `Web/Properties/launchSettings.json`.
+Clone the repository:
 
-## Configuration
+```bash
+git clone https://github.com/adnvnnn/TSMA_Meal.git
+cd TSMA_Meal
+```
 
-Configuration is loaded from `appsettings.json`, `appsettings.{Environment}.json` and
-environment variables (see `Web/Setup/LogRegister.cs`), so production values can also be
-supplied as environment variables instead of a file.
+Restore dependencies:
 
-Local and production config files are **not** tracked by git:
+```bash
+dotnet restore
+```
 
-- `Web/appsettings.Development.json` — local settings, created from `Web/appsettings.Development.Example.json`
-- `Web/appsettings.Production.json` — deployment settings, created from `Web/appsettings.Production.Example.json`
+### Configuration
 
-Never commit real connection strings or SMS credentials.
+Copy the example configuration file:
 
-The repository does not include EF Core migrations; point `ConnectionStrings:Default` at a
-database that already has the expected schema (see `Web/Database`).
+```bash
+cp Web/appsettings.Development.Example.json Web/appsettings.Development.json
+```
 
-## Tests
+On Windows PowerShell:
 
-The test suite lives next to the features it covers (`Web/Features/**/*Tests.cs`) and uses
-xUnit with Moq.
+```powershell
+Copy-Item Web/appsettings.Development.Example.json Web/appsettings.Development.json
+```
+
+Update the configuration with your environment-specific values.
+
+| Configuration Key | Description |
+|---|---|
+| `ConnectionStrings:Default` | SQL Server connection string |
+| `ApiConfig:BaseUrl` | API base URL |
+| `SmsService:Username` | SMS service username |
+| `SmsService:Password` | SMS service password |
+| `SmsService:Sender` | SMS sender number |
+| `SmsService:VerificationPatternCode` | SMS verification pattern code |
+| `SmsService:Url` | SMS service endpoint |
+| `SecuritySettings:LoginPath` | Route used for the login page |
+| `SecuritySettings:LogoutPath` | Route used to sign the user out |
+| `SecuritySettings:LoginDays` | Number of days a login stays valid |
+| `SecuritySettings:OtpExpiryMinutes` | How long a sent OTP code remains valid |
+| `SecuritySettings:MaxOtpAttemptsPerDay` | Daily limit of OTP requests per user |
+| `SecuritySettings:MaxCheckOtpAttemptsPerSend` | Verification attempts allowed per sent code |
+| `SecuritySettings:BanDurationHours` | Lockout duration after exceeding the limits |
+
+### Run the Application
+
+Build the project:
+
+```bash
+dotnet build
+```
+
+Run the application:
+
+```bash
+dotnet run --project Web
+```
+
+Default development URLs:
+
+- https://localhost:7096
+- http://localhost:5209
+
+## Database Notes
+
+This project uses an existing legacy database inherited from the previous application. Its schema contains non-standard design decisions and structural limitations.
+
+No Entity Framework migrations are included. The application expects the existing database structure to be available before running.
+
+Database-related resources are located in `Web/Database`.
+
+## Testing
+
+Run the test suite:
 
 ```bash
 dotnet test
 ```
 
-## Project layout
+Tests are implemented using **xUnit** and **Moq**.
 
-```
-Web/
-  Components/        Blazor components and pages
-  Database/          AppDbContext, entities and entity configurations
-  Features/          Account (login, logout, OTP) and Meals (list, reserve, cancel) handlers + tests
-  Setup/             Service registration and configuration binding
-  Shared/            Repositories, services, middleware and exceptions
-  Tools/             Utility helpers (Persian date/time, price formatting, encoding)
+## Project Structure
+
+```text
+TSMA_Meal/
+└── Web/
+    ├── Components/
+    ├── Database/
+    ├── Features/
+    ├── Setup/
+    ├── Shared/
+    ├── Tools/
+    └── ...
 ```
 
 ## License
 
-[MIT](LICENSE)
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
